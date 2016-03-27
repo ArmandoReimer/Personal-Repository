@@ -1,0 +1,1 @@
+function [NSlices, NChannels, NFrames, NPlanes, NSeries] = extractMovieMetadata(FileMode)
