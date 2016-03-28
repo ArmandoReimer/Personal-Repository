@@ -190,6 +190,14 @@ while changes ~= 0
     end
 end
 
+%pick the brightest z-slice
+for i = 1:length(Particles)
+    [~, max_index] = max(Particles(i).Intensity);
+    Particles(i).Intensity = Particles(i).Intensity(max_index);
+    Particles(i).x = Particles(i).x(max_index);
+    Particles(i).y = Particles(i).y(max_index);
+    Particles(i).z = Particles(i).z(max_index);
+end
 
 %time tracking
 changes = 1;
