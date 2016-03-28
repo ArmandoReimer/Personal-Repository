@@ -168,6 +168,8 @@ while changes ~= 0
     end
 Particles = Particles([Particles.r]~=1);
 end
+
+
 %time tracking
 changes = 1;
 while changes ~= 0
