@@ -168,6 +168,29 @@ while changes ~= 0
     end
 Particles = Particles([Particles.r]~=1);
 end
+%remove repeat z-slices
+changes = 1;
+while changes ~= 0
+    changes = 0;
+    try
+        for i = 1:length(Particles)
+            for j = 1:length(Particles(i).z)
+                for k = 1:length(Particles(i).z)
+                    if Particles(i).z(j) == Particles(i).z(k) && j > k
+                        Particles(i).z(j) = [];
+                        Particles(i).x(j) = [];
+                        Particles(i).y(j) = [];
+                        Particles(i).Intensity(j) = [];
+                        changes = changes + 1;
+                    end
+                end
+            end
+        end
+    catch
+    end
+end
+
+
 %time tracking
 changes = 1;
 while changes ~= 0
