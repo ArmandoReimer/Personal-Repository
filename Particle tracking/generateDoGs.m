@@ -65,7 +65,7 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 
     %Load the data
 im_stack = {};
-for j = 1:16 %For a full analysis, i'll run this to length(DTIF)
+for j = 1:10 %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
     info = imfinfo(fname);
     num_images = numel(info);
@@ -73,6 +73,11 @@ for j = 1:16 %For a full analysis, i'll run this to length(DTIF)
         im_stack{j, i} = imread(fname, i, 'Info', info);
     end
 end
+OutputFolder1=[FISHPath,filesep,Prefix,'_',filesep,'MYCODEdogsMYCODE'];
+OutputFolder2=[FISHPath,filesep,Prefix,'_',filesep,'MYCODEsegsMYCODE'];
+
+mkdir(OutputFolder1)
+mkdir(OutputFolder2)
 %%
 %DoG Stuff
 %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
@@ -83,16 +88,15 @@ neighb = 10; %This should work for a first pass and shouldn't fail on sisters.
 thr = 250;
 dog_stack  = {};
 all_frames = {};
-for i = 1:16 %Will change this to length(DTIF) for full analysis
+for i = 1:10 %Will change this to length(DTIF) for full analysis
     for j = 1:size(im_stack,2)
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
         dog_stack{i,j} = conv2(single(im), single(fspecial('gaussian',filterSize, sigma1) - fspecial('gaussian',filterSize, sigma2)),'same');
         dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-%         imwrite(uint16(dog_stack{i,j}),
-%         [FISHPath,filesep,Prefix,'_',filesep,'MYCODEdogsMYCODE',filesep,dog_name])
-%         commented out for speed
-%         imshow(im,[]);
+        imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
+        %commented out for speed
+        imshow(im,[]);
         dog = dog_stack{i,j};
         thrim = dog>thr;
         bw = im2bw(thrim);
@@ -116,16 +120,18 @@ for i = 1:16 %Will change this to length(DTIF) for full analysis
                     end
                 end
             end
-            [inten, index] = max(possible_cent(:));
-            [row, col] = ind2sub(size(possible_cent),index);
-            cent_y = pcentloc{row,col}(1); 
-            cent_x = pcentloc{row,col}(2);
-%             ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
-%             if k == n_spots
-%                 seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-%                 saveas(gcf,[FISHPath,filesep,Prefix,'_',filesep,'MYCODEsegsMYCODE',filesep,seg_name]);
-%             end
-            temp_particles{k} = [inten, cent_x, cent_y];
+            if ~isempty(possible_cent)
+                [inten, index] = max(possible_cent(:));
+                [row, col] = ind2sub(size(possible_cent),index);
+                cent_y = pcentloc{row,col}(1); 
+                cent_x = pcentloc{row,col}(2);
+                temp_particles{k} = [inten, cent_x, cent_y];
+                ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
+            end
+            if k == n_spots
+                seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
+                saveas(gcf,[OutputFolder2,filesep,seg_name]);
+            end
         end
         all_frames{i,j} = temp_particles;       
     end
@@ -137,13 +143,15 @@ nz = size(all_frames,2);
 for i = 1:nframes %frames
     for j = 1:nz %z-slices
          for k = 1:length(all_frames{i,j}) %spots within particular image
-             Particles(n).Intensity(1) = all_frames{i,j}{k}(1);
-             Particles(n).x(1) = all_frames{i,j}{k}(2);
-             Particles(n).y(1) = all_frames{i,j}{k}(3);
-             Particles(n).z(1) = j;
-             Particles(n).t(1) = i;
-             Particles(n).r = 0;
-             n = n + 1;
+             if ~isempty(all_frames{i,j}{k})
+                 Particles(n).Intensity(1) = all_frames{i,j}{k}(1);
+                 Particles(n).x(1) = all_frames{i,j}{k}(2);
+                 Particles(n).y(1) = all_frames{i,j}{k}(3);
+                 Particles(n).z(1) = j;
+                 Particles(n).t(1) = i;
+                 Particles(n).r = 0;
+                 n = n + 1;
+             end
          end
     end
 end
@@ -221,6 +229,7 @@ while changes ~= 0
     end
 Particles = Particles([Particles.r]~=1);
 end
+mkdir([DropboxFolder,filesep,Prefix,filesep,'mycode']);
 save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles')
 % for i = 1:length(Particles)
 %     if length(Particles(i).t) > 350
