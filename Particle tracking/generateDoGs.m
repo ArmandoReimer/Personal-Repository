@@ -65,12 +65,13 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 
     %Load the data
 im_stack = {};
-for j = 1:10 %For a full analysis, i'll run this to length(DTIF)
+for j = 1:length(DTIF) %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
     info = imfinfo(fname);
     num_images = numel(info);
     for i = 1:num_images
         im_stack{j, i} = imread(fname, i, 'Info', info);
+        im_stack{j, i} = im_stack{j,i}(8:end-8, 8:end-8);
     end
 end
 OutputFolder1=[FISHPath,filesep,Prefix,'_',filesep,'MYCODEdogsMYCODE'];
@@ -85,10 +86,10 @@ sigma1 = 1.5;
 sigma2 = 2.5;
 filterSize = 15; 
 neighb = 10; %This should work for a first pass and shouldn't fail on sisters.
-thr = 250;
+thr = 90;
 dog_stack  = {};
 all_frames = {};
-for i = 1:10 %Will change this to length(DTIF) for full analysis
+for i = 1:length(DTIF) %Will change this to length(DTIF) for full analysis
     for j = 1:size(im_stack,2)
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
