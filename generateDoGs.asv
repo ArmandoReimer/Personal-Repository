@@ -1,5 +1,7 @@
 function generateDoGs(Prefix)
 %%    
+        warning('off', 'images:im2bw:binaryInput');
+
 %Get the relevant folders now:
 [SourcePath,FISHPath,DropboxFolder,MS2CodePath,PreProcPath]=...
     DetermineLocalFolders(Prefix);
@@ -71,6 +73,7 @@ for j = 1:10 %For a full analysis, i'll run this to length(DTIF)
     num_images = numel(info);
     for i = 1:num_images
         im_stack{j, i} = imread(fname, i, 'Info', info);
+        %im_stack{j, i} = im_stack{j,i}(8:end-8, 8:end-8);
     end
 end
 OutputFolder1=[FISHPath,filesep,Prefix,'_',filesep,'MYCODEdogsMYCODE'];
@@ -85,18 +88,18 @@ sigma1 = 1.5;
 sigma2 = 2.5;
 filterSize = 15; 
 neighb = 10; %This should work for a first pass and shouldn't fail on sisters.
-thr = 250;
+thr = 90;
 dog_stack  = {};
 all_frames = {};
 for i = 1:10 %Will change this to length(DTIF) for full analysis
-    for j = 1:size(im_stack,2)
+    for j = 1:size(im_stack,2) %z-slices
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
         dog_stack{i,j} = conv2(single(im), single(fspecial('gaussian',filterSize, sigma1) - fspecial('gaussian',filterSize, sigma2)),'same');
-        dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-        imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
+%         dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
+%         imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
         %commented out for speed
-        imshow(im,[]);
+%         imshow(im,[]);
         dog = dog_stack{i,j};
         thrim = dog>thr;
         bw = im2bw(thrim);
@@ -107,29 +110,33 @@ for i = 1:10 %Will change this to length(DTIF) for full analysis
 
             %Find spot centroids in the actual image by hunting for absolute maxima in
             %neighborhoods around spots that were just located
-
+%             if i==1 && j ==7 && k == 2
+%                         'adf'
+%                     end
             possible_cent = [];
             pcentloc = {};
             cent = [];
             cent_intensity = 0;
             for o = 1:2*neighb
                 for p = 1:2*neighb
-                    if r(1) - neighb + o > 0 && c(1) - neighb + p > 0 && r(1) - neighb + o < size(im,2)  && c(1) - neighb + p < size(im,1)
+                    if r(1) - neighb + o > 0 && c(1) - neighb + p > 0 && r(1) - neighb + o < size(im,1)  && c(1) - neighb + p < size(im,2)
                         possible_cent(o,p) = im(r(1)-neighb+o, c(1)-neighb+p);
                         pcentloc{o,p} = [r(1)-neighb+o, c(1)-neighb+p];
                     end
                 end
             end
-            [inten, index] = max(possible_cent(:));
-            [row, col] = ind2sub(size(possible_cent),index);
-            cent_y = pcentloc{row,col}(1); 
-            cent_x = pcentloc{row,col}(2);
-            ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
-            if k == n_spots
-                seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-                saveas(gcf,[OutputFolder2,filesep,seg_name]);
+            if ~isempty(possible_cent)
+                [inten, index] = max(possible_cent(:));
+                [row, col] = ind2sub(size(possible_cent),index);
+                cent_y = pcentloc{row,col}(1); 
+                cent_x = pcentloc{row,col}(2);
+                temp_particles{k} = [inten, cent_x, cent_y];
+%                 ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
             end
-            temp_particles{k} = [inten, cent_x, cent_y];
+%             if k == n_spots
+%                 seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
+%                 saveas(gcf,[OutputFolder2,filesep,seg_name]);
+%             end
         end
         all_frames{i,j} = temp_particles;       
     end
@@ -141,37 +148,65 @@ nz = size(all_frames,2);
 for i = 1:nframes %frames
     for j = 1:nz %z-slices
          for k = 1:length(all_frames{i,j}) %spots within particular image
-             Particles(n).Intensity(1) = all_frames{i,j}{k}(1);
-             Particles(n).x(1) = all_frames{i,j}{k}(2);
-             Particles(n).y(1) = all_frames{i,j}{k}(3);
-             Particles(n).z(1) = j;
-             Particles(n).t(1) = i;
-             Particles(n).r = 0;
-             n = n + 1;
+             if ~isempty(all_frames{i,j}{k})
+                 Particles(n).Intensity(1) = all_frames{i,j}{k}(1);
+                 Particles(n).x(1) = all_frames{i,j}{k}(2);
+                 Particles(n).y(1) = all_frames{i,j}{k}(3);
+                 Particles(n).z(1) = j;
+                 Particles(n).t(1) = i;
+                 Particles(n).r = 0;
+                 n = n + 1;
+             end
          end
     end
 end
+i = 1;
 %z tracking
 changes = 1;
 while changes ~= 0
     changes = 0;
-    for n = 1:length(Particles)-1 %particle of interest
-        for j = 1:length(Particles) - 1 %particle to compare to
-            if n+j <= length(Particles)
+    for n = 1:nframes %frame of interest
+        for j = 1:length(Particles([Particles.t] == n)) - 1
+            for k = 1:length(Particles([Particles.t] == n)) - 1
+
                 dist = sqrt( (Particles(n).x(end) - Particles(n+j).x(end))^2 + (Particles(n).y(end) - Particles(n+j).y(end))^2); 
-                if dist < neighb && Particles(n).t == Particles(n+j).t
+                if dist < neighb
                     Particles(n).Intensity = [Particles(n).Intensity, Particles(n+j).Intensity];
                     Particles(n).x = [Particles(n).x, Particles(n+j).x];
                     Particles(n).y = [Particles(n).y, Particles(n+j).y];
                     Particles(n).z = [Particles(n).z, Particles(n+j).z];
                     Particles(n+j).r = 1;
                     changes = changes + 1;
-                end
             end
         end
+        end
     end
+    i = i + 1;
 Particles = Particles([Particles.r]~=1);
 end
+% %z tracking
+% changes = 1;
+% while changes ~= 0
+%     changes = 0;
+%     for n = 1:length(Particles)-1 %particle of interest
+%         %length(Particles([Particles.t] == 1)) this is how to get the
+%         %number of particles at a moment in time where this frame is 1. 
+%         for j = 1:length(Particles) - 1 %particle to compare to
+%             if n+j <= length(Particles) && Particles(n).t == Particles(n+j).t
+%                 dist = sqrt( (Particles(n).x(end) - Particles(n+j).x(end))^2 + (Particles(n).y(end) - Particles(n+j).y(end))^2); 
+%                 if dist < neighb
+%                     Particles(n).Intensity = [Particles(n).Intensity, Particles(n+j).Intensity];
+%                     Particles(n).x = [Particles(n).x, Particles(n+j).x];
+%                     Particles(n).y = [Particles(n).y, Particles(n+j).y];
+%                     Particles(n).z = [Particles(n).z, Particles(n+j).z];
+%                     Particles(n+j).r = 1;
+%                     changes = changes + 1;
+%                 end
+%             end
+%         end
+%     end
+% Particles = Particles([Particles.r]~=1);
+% end
 %remove repeat z-slices
 changes = 1;
 while changes ~= 0
