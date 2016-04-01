@@ -67,7 +67,7 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 
     %Load the data
 im_stack = {};
-for j = 1:10 %For a full analysis, i'll run this to length(DTIF)
+for j = 1:2 %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
     info = imfinfo(fname);
     num_images = numel(info);
@@ -91,7 +91,7 @@ neighb = 10; %This should work for a first pass and shouldn't fail on sisters.
 thr = 90;
 dog_stack  = {};
 all_frames = {};
-for i = 1:10 %Will change this to length(DTIF) for full analysis
+for i = 1:2 %Will change this to length(DTIF) for full analysis
     for j = 1:size(im_stack,2) %z-slices
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
@@ -160,15 +160,42 @@ for i = 1:nframes %frames
          end
     end
 end
-i = 1;
-%z tracking
+% z tracking
+% changes = 1;
+% while changes ~= 0
+%     changes = 0;
+%     i = 1;
+%     for n = 1:nframes %frame of interest     
+%         n
+%         i = i + length(Particles([Particles.t] == (n - 1) ));
+%         i
+%         for j = i:i+length(Particles([Particles.t] == n)) - 1
+%             j
+%             for k = j+1:i+length(Particles([Particles.t] == n)) - 1
+%                 dist = sqrt( (Particles(j).x(end) - Particles(k).x(end))^2 + (Particles(j).y(end) - Particles(k).y(end))^2); 
+%                 if dist < neighb
+%                     Particles(j).Intensity = [Particles(j).Intensity, Particles(k).Intensity];
+%                     Particles(j).x = [Particles(j).x, Particles(k).x];
+%                     Particles(j).y = [Particles(j).y, Particles(k).y];
+%                     Particles(j).z = [Particles(j).z, Particles(k).z];
+%                     Particles(k).r = 1;
+%                     changes = changes + 1;
+%                 end
+%             end
+%         end
+%     end
+%     Particles = Particles([Particles.r]~=1);
+%     'happened'
+% end
+% %z tracking
 changes = 1;
 while changes ~= 0
     changes = 0;
-    for n = 1:nframes %frame of interest
-        for j = 1:length(Particles([Particles.t] == n)) - 1
-            for k = 1:length(Particles([Particles.t] == n)) - 1
-
+    for n = 1:length(Particles)-1 %particle of interest
+        %length(Particles([Particles.t] == 1)) this is how to get the
+        %number of particles at a moment in time where this frame is 1. 
+        for j = 1:length(Particles) - 1 %particle to compare to
+            if n+j <= length(Particles) && Particles(n).t == Particles(n+j).t
                 dist = sqrt( (Particles(n).x(end) - Particles(n+j).x(end))^2 + (Particles(n).y(end) - Particles(n+j).y(end))^2); 
                 if dist < neighb
                     Particles(n).Intensity = [Particles(n).Intensity, Particles(n+j).Intensity];
@@ -177,36 +204,12 @@ while changes ~= 0
                     Particles(n).z = [Particles(n).z, Particles(n+j).z];
                     Particles(n+j).r = 1;
                     changes = changes + 1;
+                end
             end
         end
-        end
     end
-    i = i + 1;
 Particles = Particles([Particles.r]~=1);
 end
-% %z tracking
-% changes = 1;
-% while changes ~= 0
-%     changes = 0;
-%     for n = 1:length(Particles)-1 %particle of interest
-%         %length(Particles([Particles.t] == 1)) this is how to get the
-%         %number of particles at a moment in time where this frame is 1. 
-%         for j = 1:length(Particles) - 1 %particle to compare to
-%             if n+j <= length(Particles) && Particles(n).t == Particles(n+j).t
-%                 dist = sqrt( (Particles(n).x(end) - Particles(n+j).x(end))^2 + (Particles(n).y(end) - Particles(n+j).y(end))^2); 
-%                 if dist < neighb
-%                     Particles(n).Intensity = [Particles(n).Intensity, Particles(n+j).Intensity];
-%                     Particles(n).x = [Particles(n).x, Particles(n+j).x];
-%                     Particles(n).y = [Particles(n).y, Particles(n+j).y];
-%                     Particles(n).z = [Particles(n).z, Particles(n+j).z];
-%                     Particles(n+j).r = 1;
-%                     changes = changes + 1;
-%                 end
-%             end
-%         end
-%     end
-% Particles = Particles([Particles.r]~=1);
-% end
 %remove repeat z-slices
 changes = 1;
 while changes ~= 0
