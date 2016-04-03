@@ -102,7 +102,6 @@ for i = 1:11-1 %Will change this to length(DTIF)-1 for full analysis
         thrim = dog>thr;
         [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
-        rad = 10;
         for k = 1:n_spots
             [r,c] = find(im_label==k);
 
@@ -128,10 +127,9 @@ for i = 1:11-1 %Will change this to length(DTIF)-1 for full analysis
                 cent_x = pcentloc{row,col}(2);
                 temp_particles{k} = [inten, cent_x, cent_y];
                 ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
-                if i == 2
-                snip = cent_x-rad:cent_x+rad;
-                f = fit(snip', im(cent_y, snip)' , 'gauss1');
-                plot(f, snip, im(cent_y, snip));
+                if j ==2
+                f = fit((cent_x-4:cent_x+4)', im(cent_y, cent_x-4:cent_x+4)' , 'gauss1');
+                plot(f, cent_x-4:cent_x+4, im(cent_y, cent_x-4:cent_x+4))
                 end
             end
             if k == n_spots
