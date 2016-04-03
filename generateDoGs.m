@@ -1,6 +1,5 @@
 function generateDoGs(Prefix)
 %%    
-        warning('off', 'images:im2bw:binaryInput');
 %Get the relevant folders now:
 [SourcePath,FISHPath,DropboxFolder,MS2CodePath,PreProcPath]=...
     DetermineLocalFolders(Prefix);
@@ -66,13 +65,12 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 
     %Load the data
 im_stack = {};
-for j = 1:30 %For a full analysis, i'll run this to length(DTIF)
+for j = 1:length(DTIF) %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
     info = imfinfo(fname);
     num_images = numel(info);
     for i = 1:num_images
         im_stack{j, i} = imread(fname, i, 'Info', info);
-        im_stack{j, i} = im_stack{j,i}(20:end-20, 20:end-20);
     end
 end
 OutputFolder1=[FISHPath,filesep,Prefix,'_',filesep,'MYCODEdogsMYCODE'];
@@ -87,31 +85,30 @@ sigma1 = 1.5;
 sigma2 = 2.5;
 filterSize = 15; 
 neighb = 10; %This should work for a first pass and shouldn't fail on sisters.
-thr = 200;
+thr = 150;
 dog_stack  = {};
 all_frames = {};
-for i = 1:30 %Will change this to length(DTIF) for full analysis
+for i = 1:length(DTIF) %Will change this to length(DTIF) for full analysis
     for j = 1:size(im_stack,2) %z-slices
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
         dog_stack{i,j} = conv2(single(im), single(fspecial('gaussian',filterSize, sigma1) - fspecial('gaussian',filterSize, sigma2)),'same');
-%         dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-%         imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
+        dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
+        imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
         %commented out for speed
-%         imshow(im,[]);
-        dog = dog_stack{i,j};
+        imshow(im,[]);
+        dog = dog_stack{i,j}(10:end-10, 10:end-10);
+%         imshow(dog,[])
+        im = im(10:end-10, 10:end-10);
         thrim = dog>thr;
-        bw = im2bw(thrim);
-        [im_label, n_spots] = bwlabel(bw); 
+        [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
         for k = 1:n_spots
             [r,c] = find(im_label==k);
 
             %Find spot centroids in the actual image by hunting for absolute maxima in
             %neighborhoods around spots that were just located
-%             if i==1 && j ==7 && k == 2
-%                         'adf'
-%                     end
+
             possible_cent = [];
             pcentloc = {};
             cent = [];
@@ -130,12 +127,12 @@ for i = 1:30 %Will change this to length(DTIF) for full analysis
                 cent_y = pcentloc{row,col}(1); 
                 cent_x = pcentloc{row,col}(2);
                 temp_particles{k} = [inten, cent_x, cent_y];
-%                 ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
+                ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
             end
-%             if k == n_spots
-%                 seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-%                 saveas(gcf,[OutputFolder2,filesep,seg_name]);
-%             end
+            if k == n_spots
+                seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
+                saveas(gcf,[OutputFolder2,filesep,seg_name]);
+            end
         end
         all_frames{i,j} = temp_particles;       
     end
@@ -216,31 +213,9 @@ while changes ~= 0
     end
 Particles = Particles([Particles.r]~=1);
 end
-% changes = 1;
-% while changes ~= 0
-%     changes = 0;
-%     i = 1;
-%     for n = 1:nframes-1 %particle of interest
-%         i = i + length(Particles([Particles.t(1)] == (n - 1) ));
-%         for j = i:i+length(Particles([Particles.t(1)] == n ))-1 %particle to compare to
-%             for k = i+length(Particles([Particles.t(1)]==n)):i+length(Particles([Particles.t(1)]==n))+length(Particles([Particles.t(1)]==n+1))
-%                 dist = sqrt( (Particles(j).x(end) - Particles(k).x(end))^2 + (Particles(j).y(end) - Particles(k).y(end))^2); 
-%                 if dist < neighb
-%                     Particles(j).Intensity = [Particles(n).Intensity, Particles(n+j).Intensity];
-%                     Particles(j).x = [Particles(j).x, Particles(k).x];
-%                     Particles(j).y = [Particles(j).y, Particles(k).y];
-%                     Particles(j).z = [Particles(j).z, Particles(k).z];
-%                     Particles(j).t = [Particles(j).t, Particles(k).t];
-%                     Particles(k).r = 1;
-%                     changes = changes + 1;
-%                 end
-%             end
-%         end
-%     end
-% Particles = Particles([Particles.r]~=1);
-% end
-% mkdir([DropboxFolder,filesep,Prefix,filesep,'mycode']);
-% save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles')
+
+mkdir([DropboxFolder,filesep,Prefix,filesep,'mycode']);
+save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles')
 % % for i = 1:length(Particles)
 %     if length(Particles(i).t) > 350
 %         scatter(Particles(i).t, Particles(i).Intensity)
