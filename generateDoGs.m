@@ -65,7 +65,7 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 
     %Load the data
 im_stack = {};
-for j = 1:length(DTIF) %For a full analysis, i'll run this to length(DTIF)
+for j = 1:length(DTIF)-1 %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
     info = imfinfo(fname);
     num_images = numel(info);
@@ -88,7 +88,7 @@ neighb = 10; %This should work for a first pass and shouldn't fail on sisters.
 thr = 150;
 dog_stack  = {};
 all_frames = {};
-for i = 1:length(DTIF) %Will change this to length(DTIF) for full analysis
+for i = 1:length(DTIF)-1 %Will change this to length(DTIF)-1 for full analysis
     for j = 1:size(im_stack,2) %z-slices
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
