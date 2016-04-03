@@ -96,10 +96,9 @@ for i = 1:length(DTIF) %Will change this to length(DTIF) for full analysis
         dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
         imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
         %commented out for speed
-        imshow(im,[]);
         dog = dog_stack{i,j}(10:end-10, 10:end-10);
-%         imshow(dog,[])
         im = im(10:end-10, 10:end-10);
+        imshow(im,[]);
         thrim = dog>thr;
         [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
