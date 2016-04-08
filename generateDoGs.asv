@@ -84,8 +84,8 @@ mkdir(OutputFolder2)
 sigma1 = 1.5;
 sigma2 = 2.5;
 filterSize = 15; 
-neighb = 10; %This should work for a first pass and shouldn't fail on sisters.
-thr = 150;
+neighb = 20; %This should work for a first pass and shouldn't fail on sisters.
+thr = 90;
 dog_stack  = {};
 all_frames = {};
 for i = 1:11-1 %Will change this to length(DTIF)-1 for full analysis
@@ -98,10 +98,12 @@ for i = 1:11-1 %Will change this to length(DTIF)-1 for full analysis
         %commented out for speed
         dog = dog_stack{i,j}(10:end-10, 10:end-10);
         im = im(10:end-10, 10:end-10);
+        figure(1)
         imshow(im,[]);
         thrim = dog>thr;
         [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
+        rad = 14;
         for k = 1:n_spots
             [r,c] = find(im_label==k);
 
@@ -125,16 +127,39 @@ for i = 1:11-1 %Will change this to length(DTIF)-1 for full analysis
                 [row, col] = ind2sub(size(possible_cent),index);
                 cent_y = pcentloc{row,col}(1); 
                 cent_x = pcentloc{row,col}(2);
-                temp_particles{k} = [inten, cent_x, cent_y];
+                temp_particles = [temp_particles,[inten, cent_x, cent_y, 0]];
                 ellipse(neighb/2,neighb/2,0,cent_x,cent_y,'r');
-                if j ==2
-                f = fit((cent_x-4:cent_x+4)', im(cent_y, cent_x-4:cent_x+4)' , 'gauss1');
-                plot(f, cent_x-4:cent_x+4, im(cent_y, cent_x-4:cent_x+4))
+                try
+                    if i == 10
+                    end
+                    %Fit a single 2D Gaussian
+                    snip = im(cent_y-rad:cent_y+rad, cent_x-rad: cent_x+rad);
+                    [x, y] = meshgrid(1:size(snip,1), 1:size(snip,2));
+                    gfit1 = @(params) params(1).*exp((-1/2).*(((x-params(2))./params(3)).^2 + ((y-params(4))./params(5)).^2)) + params(6) - double(snip);
+                    init_params = [2000, 10, 5, 10, 5,1000];
+                    [f1,res1] = lsqnonlin(gfit1, init_params);
+                    figure(2)
+                    surf(x, y, gfit1(f1) + double(snip));
+                    figure(3)
+                    imshow(snip,[])
+                    %Fit two 2D Gaussians
+                    gfit2 = @(params) params(1).*exp((-1/2).*(((x-params(2))./params(3)).^2 + ((y-params(4))./params(5)).^2)) + params(6).*exp((-1/2).*(((x-params(7))./params(8)).^2 + ((y-params(9))./params(10)).^2))+ params(11) - double(snip);
+                    init_params = [1000, 10, 5, 10, 5,1000, 10, 5, 10, 5, 1000];
+                    [f2,res2] = lsqnonlin(gfit2, init_params);
+                    figure(2)
+                    surf(x, y, gfit2(f2) + double(snip));
+                    if abs(res1-res2) < .1 
+                        temp_particles{k} = [f1(1), f1(2), f1(3), f1(5)];
+                    else
+                        temp_particles{k} = [f1(1), f1(2), f1(3), f1(5)];
+                        temp_particles{k} = [f1(1), f1(2), f1(3), f1(5)];
+                    end
+                catch
                 end
             end
             if k == n_spots
                 seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-%                 saveas(gcf,[OutputFolder2,filesep,seg_name]);
+                saveas(gcf,[OutputFolder2,filesep,seg_name]);
             end
         end
         all_frames{i,j} = temp_particles;       
@@ -155,6 +180,7 @@ for i = 1:nframes %frames
                  Particles(n).Intensity(1) = all_frames{i,j}{k}(1);
                  Particles(n).x(1) = all_frames{i,j}{k}(2);
                  Particles(n).y(1) = all_frames{i,j}{k}(3);
+                 Particles(n).Offset(1) = all_frames{i,j}{k}(4);
                  Particles(n).z(1) = j;
                  Particles(n).t(1) = i;
                  Particles(n).r = 0;
@@ -178,6 +204,7 @@ while changes ~= 0
                     Particles(j).x = [Particles(j).x, Particles(k).x];
                     Particles(j).y = [Particles(j).y, Particles(k).y];
                     Particles(j).z = [Particles(j).z, Particles(k).z];
+                    Particles(j).Offset = [Particles(j).Offset, Particles(k).Offset];
                     Particles(k).r = 1;
                     changes = changes + 1;
                 end
@@ -195,6 +222,7 @@ for i = 1:length(Particles)
     Particles(i).x = Particles(i).x(max_index);
     Particles(i).y = Particles(i).y(max_index);
     Particles(i).z = Particles(i).z(max_index);
+    Particles(i).Offset = Particles(i).Offset(max_index);
 end
 
 %time tracking
@@ -210,6 +238,7 @@ while changes ~= 0
                     Particles(n).x = [Particles(n).x, Particles(j).x];
                     Particles(n).y = [Particles(n).y, Particles(j).y];
                     Particles(n).z = [Particles(n).z, Particles(j).z];
+                    Particles(n).z = [Particles(n).Offset, Particles(j).Offset];
                     Particles(n).t = [Particles(n).t, Particles(j).t];
                     Particles(j).r = 1;
                     changes = changes + 1;
@@ -220,8 +249,8 @@ while changes ~= 0
 Particles = Particles([Particles.r]~=1);
 end
 
-% mkdir([DropboxFolder,filesep,Prefix,filesep,'mycode']);
-% save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles')
+mkdir([DropboxFolder,filesep,Prefix,filesep,'mycode']);
+save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles')
 % % for i = 1:length(Particles)
 %     if length(Particles(i).t) > 350
 %         scatter(Particles(i).t, Particles(i).Intensity)
