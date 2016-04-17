@@ -1,4 +1,4 @@
-function generateDoGs(Prefix, thresh, show,save)
+function generateDoGs(Prefix, thresh, show_status,save_status)
 try
     parpool;
 catch
@@ -89,7 +89,7 @@ mkdir(OutputFolder2)
 pixelSize = 100; %nm
 sigma1 = 150 / pixelSize;
 sigma2 = 250 / pixelSize;
-filterSize = 150 /pixelSize; 
+filterSize = 1500 /pixelSize; 
 neighb = 3000 / pixelSize; %This should work for a first pass and shouldn't fail on sisters. 20 = 2um
 thr = thresh;
 dog_stack  = {};
@@ -99,14 +99,14 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
         dog_stack{i,j} = conv2(single(im), single(fspecial('gaussian',filterSize, sigma1) - fspecial('gaussian',filterSize, sigma2)),'same');
-        if save
+        if save_status
             dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
             imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
         end
         %commented out for speed
         dog = dog_stack{i,j}(10:end-10, 10:end-10);
         im = im(10:end-10, 10:end-10);
-        if show
+        if show_status
             figure(1)
             imshow(im,[]);
         end
@@ -138,7 +138,8 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
                 cent_y = pcentloc{row,col}(1); 
                 cent_x = pcentloc{row,col}(2);
                % temp_particles = [temp_particles,[0, cent_x, cent_y, 0, 0]];
-               if show 
+               temp_particles = {};
+               if show_status
                     ellipse(neighb/2,neighb/2,0,cent_y,cent_x,'r');
                end
 %                 try
@@ -156,7 +157,7 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
                 if cent_y - rad > 1 && cent_y - rad > 1 && cent_x - rad > 1 && cent_x - rad > 1 && cent_y + rad < size(im, 1) && cent_x + rad < size(im,2)
                     snip = im(cent_y-rad:cent_y+rad, cent_x-rad: cent_x+rad);
 %                      [f1, res1, f2, res2] = fitGausses(snip);
-                    [f1, res1] = fitGausses(snip,show);
+                    [f1, res1] = fitGausses(snip,show_status);
                     c_x = f1(2) - rad + cent_x;
                     c_y = f1(4) - rad + cent_y;
                     int_x = [round(c_x - f1(3)), round(c_x + f1(3))];
@@ -168,11 +169,12 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
                                 fluor = fluor + double(im(v,w));
                             end
                         end
-                        temp_particles = [temp_particles,double([fluor, c_x, c_y, f1(6)])];
+                        temp = {{fluor, c_x, c_y, f1(6), snip}};
+                        temp_particles = [temp_particles,temp];
                     end
                 end
             end
-            if k == n_spots && save
+            if k == n_spots && save_status
                 seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
                 saveas(gcf,[OutputFolder2,filesep,seg_name]);
             end
@@ -192,11 +194,12 @@ for i = 1:nframes %frames
     for j = 1:nz %z-slices
          for k = 1:length(all_frames{i,j}) %spots within particular image
              if ~isempty(all_frames{i,j}{k})
-                 Particles(n).Intensity(1) = all_frames{i,j}{k}(1);
-                 Particles(n).x(1) = all_frames{i,j}{k}(2);
-                 Particles(n).y(1) = all_frames{i,j}{k}(3);
-                 Particles(n).Offset(1) = all_frames{i,j}{k}(4);
+                 Particles(n).Intensity(1) = cell2mat(all_frames{i,j}{k}(1));
+                 Particles(n).x(1) = cell2mat(all_frames{i,j}{k}(2));
+                 Particles(n).y(1) = cell2mat(all_frames{i,j}{k}(3));
+                 Particles(n).Offset(1) = cell2mat(all_frames{i,j}{k}(4));
 %                  Particles(n).Sister(1) = all_frames{i,j}{k}(5);
+                 Particles(n).Snippet{1} = cell2mat(all_frames{i,j}{k}(5));
                  Particles(n).z(1) = j;
                  Particles(n).t(1) = i;
                  Particles(n).r = 0;
@@ -221,6 +224,7 @@ while changes ~= 0
                     Particles(j).y = [Particles(j).y, Particles(k).y];
                     Particles(j).z = [Particles(j).z, Particles(k).z];
                     Particles(j).Offset = [Particles(j).Offset, Particles(k).Offset];
+                    Particles(j).Snippet = [Particles(j).Snippet, Particles(k).Snippet];
                     Particles(k).r = 1;
                     changes = changes + 1;
                 end
@@ -239,6 +243,7 @@ for i = 1:length(Particles)
     Particles(i).y = Particles(i).y(max_index);
     Particles(i).z = Particles(i).z(max_index);
     Particles(i).Offset = Particles(i).Offset(max_index);
+    Particles(i).Snippet = {Particles(i).Snippet{max_index}};
 end
 
 %time tracking
@@ -256,6 +261,7 @@ while changes ~= 0
                     Particles(n).z = [Particles(n).z, Particles(j).z];
                     Particles(n).Offset = [Particles(n).Offset, Particles(j).Offset];
                     Particles(n).t = [Particles(n).t, Particles(j).t];
+                    Particles(n).Snippet = [Particles(n).Snippet, Particles(j).Snippet];
                     Particles(j).r = 1;
                     changes = changes + 1;
                 end
@@ -266,7 +272,7 @@ Particles = Particles([Particles.r]~=1);
 end
 
 mkdir([DropboxFolder,filesep,Prefix,filesep,'mycode']);
-save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles')
+save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles');
 for i = 1:length(Particles)
     if length(Particles(i).t) > 50
         plot(Particles(i).t, Particles(i).Intensity)
