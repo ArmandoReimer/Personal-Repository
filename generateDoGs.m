@@ -162,6 +162,7 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
                     c_y = f1(4) - rad + cent_y;
                     int_x = [round(c_x - f1(3)), round(c_x + f1(3))];
                     int_y = [round(c_y - f1(5)), round(c_y + f1(5))];
+                    area = (int_x(2) - int_x(1)) * (int_y(2) - int_y(1));
                     fluor = 0;
                     if int_x(1) > 1 && int_y(1) > 1 && int_x(2) < size(im,2) && int_y(2) < size(im,1)
                         for w = int_x(1):int_x(2)
@@ -169,7 +170,7 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
                                 fluor = fluor + double(im(v,w));
                             end
                         end
-                        temp = {{fluor, c_x, c_y, f1(6), snip}};
+                        temp = {{fluor, c_x, c_y, f1(6), snip, area}};
                         temp_particles = [temp_particles,temp];
                     end
                 end
@@ -200,6 +201,7 @@ for i = 1:nframes %frames
                  Particles(n).Offset(1) = cell2mat(all_frames{i,j}{k}(4));
 %                  Particles(n).Sister(1) = all_frames{i,j}{k}(5);
                  Particles(n).Snippet{1} = cell2mat(all_frames{i,j}{k}(5));
+                 Particles(n).Area{1} = cell2mat(all_frames{i,j}{k}(6));
                  Particles(n).z(1) = j;
                  Particles(n).t(1) = i;
                  Particles(n).r = 0;
@@ -225,6 +227,8 @@ while changes ~= 0
                     Particles(j).z = [Particles(j).z, Particles(k).z];
                     Particles(j).Offset = [Particles(j).Offset, Particles(k).Offset];
                     Particles(j).Snippet = [Particles(j).Snippet, Particles(k).Snippet];
+                    Particles(j).Area = [Particles(j).Area, Particles(k).Area];
+
                     Particles(k).r = 1;
                     changes = changes + 1;
                 end
@@ -244,6 +248,7 @@ for i = 1:length(Particles)
     Particles(i).z = Particles(i).z(max_index);
     Particles(i).Offset = Particles(i).Offset(max_index);
     Particles(i).Snippet = {Particles(i).Snippet{max_index}};
+    Particles(i).Area = Particles(i).Area(max_index);
 end
 
 %time tracking
@@ -262,6 +267,7 @@ while changes ~= 0
                     Particles(n).Offset = [Particles(n).Offset, Particles(j).Offset];
                     Particles(n).t = [Particles(n).t, Particles(j).t];
                     Particles(n).Snippet = [Particles(n).Snippet, Particles(j).Snippet];
+                    Particles(n).Area = [Particles(n).Area, Particles(j).Area];
                     Particles(j).r = 1;
                     changes = changes + 1;
                 end
