@@ -1,4 +1,4 @@
-function generateDoGs(Prefix, thresh)
+function generateDoGs(Prefix, thresh, show,save)
 try
     parpool;
 catch
@@ -69,7 +69,7 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 
     %Load the data
 im_stack = {};
-for j = 1:length(DTIF)-1 %For a full analysis, i'll run this to length(DTIF)
+for j = 1:10-1 %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
     info = imfinfo(fname);
     num_images = numel(info);
@@ -84,30 +84,36 @@ mkdir(OutputFolder1)
 mkdir(OutputFolder2)
 %%
 %DoG Stuff
-%filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
-sigma1 = 1.5; %1.5 is 150nm
-sigma2 = 2.5; %2.5 is 250nm
-filterSize = 15; %15 is 1.5um
-neighb = 30; %This should work for a first pass and shouldn't fail on sisters. 20 = 2um
+%filterSize >> sigma 2 > sigma 1. these values should be good for a first
+%pass.
+pixelSize = 100; %nm
+sigma1 = 150 / pixelSize;
+sigma2 = 250 / pixelSize;
+filterSize = 150 /pixelSize; 
+neighb = 3000 / pixelSize; %This should work for a first pass and shouldn't fail on sisters. 20 = 2um
 thr = thresh;
 dog_stack  = {};
 all_frames = {};
-for i = 1:length(DTIF)-1 %Will change this to length(DTIF)-1 for full analysis
+for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
     for j = 1:size(im_stack,2) %z-slices
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
         dog_stack{i,j} = conv2(single(im), single(fspecial('gaussian',filterSize, sigma1) - fspecial('gaussian',filterSize, sigma2)),'same');
-        dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-%          imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
+        if save
+            dog_name = ['DOG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
+            imwrite(uint16(dog_stack{i,j}), [OutputFolder1,filesep,dog_name])
+        end
         %commented out for speed
         dog = dog_stack{i,j}(10:end-10, 10:end-10);
         im = im(10:end-10, 10:end-10);
-        figure(1)
-        imshow(im,[]);
+        if show
+            figure(1)
+            imshow(im,[]);
+        end
         thrim = dog>thr;
         [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
-        rad = 20; %14 is 1.4um
+        rad = 2000 / pixelSize;
         for k = 1:n_spots
             [r,c] = find(im_label==k);
 
@@ -132,7 +138,9 @@ for i = 1:length(DTIF)-1 %Will change this to length(DTIF)-1 for full analysis
                 cent_y = pcentloc{row,col}(1); 
                 cent_x = pcentloc{row,col}(2);
                % temp_particles = [temp_particles,[0, cent_x, cent_y, 0, 0]];
-                ellipse(neighb/2,neighb/2,0,cent_y,cent_x,'r');
+               if show 
+                    ellipse(neighb/2,neighb/2,0,cent_y,cent_x,'r');
+               end
 %                 try
 %                     %Fit a single 2D Gaussian
 %                     snip = im(cent_y-rad:cent_y+rad, cent_x-rad: cent_x+rad);
@@ -148,7 +156,7 @@ for i = 1:length(DTIF)-1 %Will change this to length(DTIF)-1 for full analysis
                 if cent_y - rad > 1 && cent_y - rad > 1 && cent_x - rad > 1 && cent_x - rad > 1 && cent_y + rad < size(im, 1) && cent_x + rad < size(im,2)
                     snip = im(cent_y-rad:cent_y+rad, cent_x-rad: cent_x+rad);
 %                      [f1, res1, f2, res2] = fitGausses(snip);
-                    [f1, res1] = fitGausses(snip);
+                    [f1, res1] = fitGausses(snip,show);
                     c_x = f1(2) - rad + cent_x;
                     c_y = f1(4) - rad + cent_y;
                     int_x = [round(c_x - f1(3)), round(c_x + f1(3))];
@@ -164,10 +172,10 @@ for i = 1:length(DTIF)-1 %Will change this to length(DTIF)-1 for full analysis
                     end
                 end
             end
-%             if k == n_spots
-%                 seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
-%                 saveas(gcf,[OutputFolder2,filesep,seg_name]);
-%             endPrefix
+            if k == n_spots && save
+                seg_name = ['SEG_',Prefix,'_',iIndex(i,3),'_z',iIndex(j,2),'.tif'];
+                saveas(gcf,[OutputFolder2,filesep,seg_name]);
+            end
         end
         all_frames{i,j} = temp_particles;
     end

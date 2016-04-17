@@ -84,10 +84,12 @@ mkdir(OutputFolder1)
 mkdir(OutputFolder2)
 %%
 %DoG Stuff
-%filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
-sigma1 = 1.5; %1.5 is 150nm
-sigma2 = 2.5; %2.5 is 250nm
-filterSize = 15; %15 is 1.5um
+%filterSize >> sigma 2 > sigma 1. these values should be good for a first
+%pass.
+pixelSize = 100; %nm
+sigma1 = 150 / pixelSize;
+sigma2 = 250 / pixelSize
+filterSize = 150/pixelSize; %in um
 neighb = 30; %This should work for a first pass and shouldn't fail on sisters. 20 = 2um
 thr = thresh;
 dog_stack  = {};
@@ -102,8 +104,8 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
         %commented out for speed
         dog = dog_stack{i,j}(10:end-10, 10:end-10);
         im = im(10:end-10, 10:end-10);
-        figure(1)
-        imshow(im,[]);
+%         figure(1)
+%         imshow(im,[]);
         thrim = dog>thr;
         [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
@@ -132,7 +134,7 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
                 cent_y = pcentloc{row,col}(1); 
                 cent_x = pcentloc{row,col}(2);
                % temp_particles = [temp_particles,[0, cent_x, cent_y, 0, 0]];
-                ellipse(neighb/2,neighb/2,0,cent_y,cent_x,'r');
+%                 ellipse(neighb/2,neighb/2,0,cent_y,cent_x,'r');
 %                 try
 %                     %Fit a single 2D Gaussian
 %                     snip = im(cent_y-rad:cent_y+rad, cent_x-rad: cent_x+rad);
@@ -151,16 +153,16 @@ for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
                     [f1, res1] = fitGausses(snip);
                     c_x = f1(2) - rad + cent_x;
                     c_y = f1(4) - rad + cent_y;
-                    int_x = [c_x - f1(3), c_x + f1(3)];
-                    int_y = [c_y - f1(5), c_y + f1(5)];
+                    int_x = [round(c_x - f1(3)), round(c_x + f1(3))];
+                    int_y = [round(c_y - f1(5)), round(c_y + f1(5))];
                     fluor = 0;
                     if int_x(1) > 1 && int_y(1) > 1 && int_x(2) < size(im,2) && int_y(2) < size(im,1)
                         for w = int_x(1):int_x(2)
                             for v = int_y(1): int_y(2)
-                                fluor = fluor + im(v,w);
+                                fluor = fluor + double(im(v,w));
                             end
                         end
-                        temp_particles = [temp_particles,[fluor, c_x, c_y, f1(6)]];
+                        temp_particles = [temp_particles,double([fluor, c_x, c_y, f1(6)])];
                     end
                 end
             end
@@ -260,7 +262,7 @@ end
 mkdir([DropboxFolder,filesep,Prefix,filesep,'mycode']);
 save([DropboxFolder,filesep,Prefix,filesep,'mycode',filesep,'Particles.mat'], 'Particles')
 for i = 1:length(Particles)
-    if length(Particles(i).t) > 250
+    if length(Particles(i).t) > 50
         plot(Particles(i).t, Particles(i).Intensity)
         i
         hold on

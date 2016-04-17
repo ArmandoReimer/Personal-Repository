@@ -1,16 +1,18 @@
 %function [f1, res1, f2, res2] = fitGausses(snip)
-function [f1, res1] = fitGausses(snip)
+function [f1, res1] = fitGausses(snip, show)
 
 snip = double(snip);
 [y,x] = meshgrid(1:size(snip,1), 1:size(snip,2));
 gfit1 = @(params) params(1).*exp((-1/2).*(((x-params(2))./params(3)).^2 + ((y-params(4))./params(5)).^2)) + params(6) - double(snip);
 init_params = [2000, 10, 5, 10, 5,1000];
 [f1,res1] = lsqnonlin(gfit1, init_params,[0,0,0,0,0,0],[inf,inf,inf,inf,inf,inf]);
-figure(2)
-surf(y, x, gfit1(f1) + snip);
-title('single gaussian')
-figure(3)
-imshow(imresize(snip,10),[]);
+if show
+    figure(2)
+    surf(y, x, gfit1(f1) + snip);
+    title('single gaussian')
+    figure(3)
+    imshow(imresize(snip,10),[]);
+end
 
 
 % %Fit two 2D Gaussians
