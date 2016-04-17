@@ -1,8 +1,9 @@
-function generateDoGs(Prefix, thresh, show_status,save_status)
+function generateDoGs(Prefix, thresh, show_status,save_status, num_frames)
 try
     parpool;
 catch
 end
+
 %%    
 %Get the relevant folders now:
 [SourcePath,FISHPath,DropboxFolder,MS2CodePath,PreProcPath]=...
@@ -66,10 +67,12 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 %Here I want to load each of the tifs and iterate through them, generating
 %dog images in each iteration
 
-
+if num_frames == 0
+    num_frames = length(DTIF);
+end
     %Load the data
 im_stack = {};
-for j = 1:10-1 %For a full analysis, i'll run this to length(DTIF)
+for j = 1:num_frames-1 %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
     info = imfinfo(fname);
     num_images = numel(info);
@@ -94,7 +97,7 @@ neighb = 3000 / pixelSize; %This should work for a first pass and shouldn't fail
 thr = thresh;
 dog_stack  = {};
 all_frames = {};
-for i = 1:10-1 %Will change this to length(DTIF)-1 for full analysis
+for i = 1:num_frames-1 %Will change this to length(DTIF)-1 for full analysis
     for j = 1:size(im_stack,2) %z-slices
         im = im_stack{i,j};
         %filterSize >> sigma 2 > sigma 1. these values should be good for a first pass.
@@ -210,6 +213,9 @@ for i = 1:nframes %frames
          end
     end
 end
+
+fields = fieldnames(Particles);
+
 % z tracking
 changes = 1;
 while changes ~= 0
@@ -221,14 +227,9 @@ while changes ~= 0
             for k = j+1:i+length(Particles([Particles.t] == n)) - 1
                 dist = sqrt( (Particles(j).x(end) - Particles(k).x(end))^2 + (Particles(j).y(end) - Particles(k).y(end))^2); 
                 if dist < neighb && Particles(j).z(end) ~= Particles(k).z(end)
-                    Particles(j).Intensity = [Particles(j).Intensity, Particles(k).Intensity];
-                    Particles(j).x = [Particles(j).x, Particles(k).x];
-                    Particles(j).y = [Particles(j).y, Particles(k).y];
-                    Particles(j).z = [Particles(j).z, Particles(k).z];
-                    Particles(j).Offset = [Particles(j).Offset, Particles(k).Offset];
-                    Particles(j).Snippet = [Particles(j).Snippet, Particles(k).Snippet];
-                    Particles(j).Area = [Particles(j).Area, Particles(k).Area];
-
+                    for m = 1:numel(fields)-2 %do not include fields 'r' or 't'
+                        Particles(j).(fields{m}) = [Particles(j).(fields{m}), Particles(k).(fields{m})];
+                    end
                     Particles(k).r = 1;
                     changes = changes + 1;
                 end
@@ -242,13 +243,9 @@ end
 %pick the brightest z-slice
 for i = 1:length(Particles)
     [~, max_index] = max(Particles(i).Intensity);
-    Particles(i).Intensity = Particles(i).Intensity(max_index);
-    Particles(i).x = Particles(i).x(max_index);
-    Particles(i).y = Particles(i).y(max_index);
-    Particles(i).z = Particles(i).z(max_index);
-    Particles(i).Offset = Particles(i).Offset(max_index);
-    Particles(i).Snippet = {Particles(i).Snippet{max_index}};
-    Particles(i).Area = Particles(i).Area(max_index);
+    for j = 1:numel(fields)-2 %do not include fields 'r' or 't'
+        Particles(i).(fields{j}) = Particles(i).(fields{j})(max_index);
+    end
 end
 
 %time tracking
@@ -260,14 +257,9 @@ while changes ~= 0
             if Particles(n).t(end) == (Particles(j).t(end) -  1)
                 dist = sqrt( (Particles(n).x(end) - Particles(j).x(end))^2 + (Particles(n).y(end) - Particles(j).y(end))^2); 
                 if dist < neighb
-                    Particles(n).Intensity = [Particles(n).Intensity, Particles(j).Intensity];
-                    Particles(n).x = [Particles(n).x, Particles(j).x];
-                    Particles(n).y = [Particles(n).y, Particles(j).y];
-                    Particles(n).z = [Particles(n).z, Particles(j).z];
-                    Particles(n).Offset = [Particles(n).Offset, Particles(j).Offset];
-                    Particles(n).t = [Particles(n).t, Particles(j).t];
-                    Particles(n).Snippet = [Particles(n).Snippet, Particles(j).Snippet];
-                    Particles(n).Area = [Particles(n).Area, Particles(j).Area];
+                    for m = 1:numel(fields)-1 %do not include fields 'r'
+                        Particles(n).(fields{m}) = [Particles(n).(fields{m}), Particles(j).(fields{m})];
+                    end
                     Particles(j).r = 1;
                     changes = changes + 1;
                 end
