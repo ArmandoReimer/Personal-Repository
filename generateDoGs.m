@@ -70,7 +70,9 @@ DLAT=dir([Folder,filesep,'*_Settings.txt']);
 if num_frames == 0
     num_frames = length(DTIF);
 end
-    %Load the data
+
+%Load the data
+
 im_stack = {};
 for j = 1:num_frames-1 %For a full analysis, i'll run this to length(DTIF)
     fname = [Folder, filesep, DTIF(j).name];
@@ -93,10 +95,10 @@ pixelSize = 100; %nm
 sigma1 = 150 / pixelSize;
 sigma2 = 250 / pixelSize;
 filterSize = 1500 /pixelSize; 
-neighb = 3000 / pixelSize; %This should work for a first pass and shouldn't fail on sisters. 20 = 2um
-thr = thresh;
-dog_stack  = {};
-all_frames = {};
+neighb = 500 / pixelSize; %This should work for a first pass and shouldn't fail on sisters.
+thr = thresh; 
+dog_stack  = {}; 
+all_frames = {}; 
 for i = 1:num_frames-1 %Will change this to length(DTIF)-1 for full analysis
     for j = 1:size(im_stack,2) %z-slices
         im = im_stack{i,j};
@@ -116,7 +118,7 @@ for i = 1:num_frames-1 %Will change this to length(DTIF)-1 for full analysis
         thrim = dog>thr;
         [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
-        rad = 2000 / pixelSize;
+        rad = 500 / pixelSize; %500nm is roughly the size of a sister chromatid diffraction limited spot.
         for k = 1:n_spots
             [r,c] = find(im_label==k);
 
@@ -194,8 +196,8 @@ clear dog_stack
 n = 1;
 nframes = size(all_frames,1);
 nz = size(all_frames,2);
-for i = 1:nframes %frames
-    for j = 1:nz %z-slices
+for i = 1:nframes 
+    for j = 1:nz 
          for k = 1:length(all_frames{i,j}) %spots within particular image
              if ~isempty(all_frames{i,j}{k})
                  Particles(n).Intensity(1) = cell2mat(all_frames{i,j}{k}(1));
@@ -221,7 +223,7 @@ changes = 1;
 while changes ~= 0
     changes = 0;
     i = 1;
-    for n = 1:nframes %frame of interest   
+    for n = 1:nframes   
         i = i + length(Particles([Particles.t] == (n - 1) ));
         for j = i:i+length(Particles([Particles.t] == n)) - 1
             for k = j+1:i+length(Particles([Particles.t] == n)) - 1
