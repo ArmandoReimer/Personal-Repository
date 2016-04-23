@@ -1,8 +1,18 @@
-function generateDoGs(Prefix, thresh, show_status,save_status, num_frames)
-try
-    parpool;
-catch
-end
+function segment_track_spots(Prefix, thresh, show_status,save_status, num_frames)
+
+%show_status takes 0 or 1 depending on whether you want to display plots
+%and images
+
+%save_status takes 0 or 1 depending on whether you want to save your files
+
+%num_frames for debugging should be kept at 5-20
+
+%thresh should be kept at ~90-200
+
+% try
+%     parpool;
+% catch
+% end
 
 %%    
 %Get the relevant folders now:
@@ -118,7 +128,7 @@ for i = 1:num_frames-1 %Will change this to length(DTIF)-1 for full analysis
         thrim = dog>thr;
         [im_label, n_spots] = bwlabel(thrim); 
         temp_particles = {};
-        rad = 500 / pixelSize; %500nm is roughly the size of a sister chromatid diffraction limited spot.
+        rad = 600 / pixelSize; %500nm is roughly the size of a sister chromatid diffraction limited spot.
         for k = 1:n_spots
             [r,c] = find(im_label==k);
 
@@ -163,20 +173,23 @@ for i = 1:num_frames-1 %Will change this to length(DTIF)-1 for full analysis
                     snip = im(cent_y-rad:cent_y+rad, cent_x-rad: cent_x+rad);
 %                      [f1, res1, f2, res2] = fitGausses(snip);
                     [f1, res1] = fitGausses(snip,show_status);
-                    c_x = f1(2) - rad + cent_x;
-                    c_y = f1(4) - rad + cent_y;
-                    int_x = [round(c_x - f1(3)), round(c_x + f1(3))];
-                    int_y = [round(c_y - f1(5)), round(c_y + f1(5))];
-                    area = (int_x(2) - int_x(1)) * (int_y(2) - int_y(1));
-                    fluor = 0;
-                    if int_x(1) > 1 && int_y(1) > 1 && int_x(2) < size(im,2) && int_y(2) < size(im,1)
-                        for w = int_x(1):int_x(2)
-                            for v = int_y(1): int_y(2)
-                                fluor = fluor + double(im(v,w));
+                    %Quality control.
+                    if f1(3) > rad+3 || f1(5) > rad+3
+                        c_x = f1(2) - rad + cent_x;
+                        c_y = f1(4) - rad + cent_y;
+                        int_x = [round(c_x - f1(3)), round(c_x + f1(3))];
+                        int_y = [round(c_y - f1(5)), round(c_y + f1(5))];
+                        area = (int_x(2) - int_x(1)) * (int_y(2) - int_y(1));
+                        fluor = 0;
+                        if int_x(1) > 1 && int_y(1) > 1 && int_x(2) < size(im,2) && int_y(2) < size(im,1)
+                            for w = int_x(1):int_x(2)
+                                for v = int_y(1): int_y(2)
+                                    fluor = fluor + double(im(v,w));
+                                end
                             end
+                            temp = {{fluor, c_x, c_y, f1(6), snip, area}};
+                            temp_particles = [temp_particles,temp];
                         end
-                        temp = {{fluor, c_x, c_y, f1(6), snip, area}};
-                        temp_particles = [temp_particles,temp];
                     end
                 end
             end
