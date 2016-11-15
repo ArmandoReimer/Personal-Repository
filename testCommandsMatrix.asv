@@ -1,0 +1,10 @@
+%ServerSocket CAM = new ServerSocket ('192.168.1.1', 8895);
+t = tcpip('192.168.1.1', , 'NetworkRole', 'server');
+fopen(t);
+command = '/cli:frank /app:matrix /sys:1 /cmd:setposition /typ:absolute /dev:zdrive /unit:meter /zpos:0.000032'
+fwrite(t, command)
+
+% out = new ObjectOutputStream(CAM.getOutputStream());
+% out.writeObject('/cli:frank /app:matrix /cmd:deletelist'); out.flush();
+% out.writeObject ('/cli:frank /app:matrix /cmd:startcamscan /runtime:600 /repeattime:60'); out.flush();
+% out.writeObject ('/cli:frank /app:matrix /cmd:stopcamscan'); out.flush();

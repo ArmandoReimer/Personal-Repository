@@ -1,0 +1,9 @@
+> motif1 
+ag
+ta
+> motif2
+attg
+> motif3
+atgcc
+> motif4
+acggc
