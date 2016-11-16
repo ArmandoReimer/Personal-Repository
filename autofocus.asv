@@ -14,6 +14,11 @@ for j = 1:n_stacks
     cdir = [imdir, 'image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000--Z00--C00.ome.tif']
     imshow(cdir);
 
+
+    t2 = tcpip('128.32.173.234')
+    fopen(t2)
+
+
     %sample_image = 'D:\Data\Armando\livemRNA\Data\PreProcessedData\2016-10-18-1A3+5-evePr_7_Mikhail\2016-10-18-1A3+5-evePr_7_Mikhail-His_056.tif';
     d = 'D:\Data\Armando\livemRNA\Data\PreProcessedData\2016-10-18-1A3+5-evePr_7_Mikhail\';
     sample_stack_dir = dir(d);
