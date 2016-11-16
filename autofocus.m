@@ -8,7 +8,8 @@ for j = 1:n_stacks
     fwrite(t2, command);
 
     loc = 'D:\MatrixScreenerImages';
-    imdir = [loc, 'D:\MatrixScreenerImages\3.3.0_9757\a--15_11_2016_07_45\b--S00\c--U00--V00\d--X00--Y00\AF']
+    imdate = datestr(now, 'dd_mm_yyyy')
+    imdir = [loc, 'D:\MatrixScreenerImages\3.3.0_9757\a--', imdate,'_07_45\b--S00\c--U00--V00\d--X00--Y00\AF']
     mdir = [imdir, 'metadata\image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000.ome.xml'];
     cin = fileread(c)
     cdir = [imdir, 'image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000--Z00--C00.ome.tif']
