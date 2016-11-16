@@ -1,9 +1,16 @@
 close all;
 %here i read in the data--------------------------------------------------
+t2 = tcpip('128.32.173.234')
+fopen(t2)
+command = '/cli:Leica-SP8PR-WS /app:matrix /cmd:startscan';
+fwrite(t2, command);
 
 loc = 'D:\MatrixScreenerImages';
-c = [loc, '3.30_9757\experiment--2016_11_07_22_06_06\slide--S00\chamber-U00-V00\field--X01-Y01\metadata';
-    
+imdir = [loc, 'D:\MatrixScreenerImages\3.3.0_9757\a--15_11_2016_07_45\b--S00\c--U00--V00\d--X00--Y00\AF']
+mdir = [imdir, 'metadata\image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000.ome.xml'];
+cin = fileread(c)
+cdir = [imdir, 'image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000--Z00--C00.ome.tif']
+imshow(cdir);
     
 
 t2 = tcpip('128.32.173.234')
@@ -34,9 +41,20 @@ for i = 1:dirlength
     end
 end
 [max, max_index] = max(n_spotss);
+
+%this is the string in the xml metadata for objective position
+%<OriginalMetadata ID="OriginalMetadata:295" Name="Data - Image -
+%Attachment - ATLConfocalSettingDefinition - AdditionalZPositionList - AdditionalZPosition - ZPosition" Value="0.004369592575"/> 
+
+%and this is the string in the metadata for galvo
+%<StagePosition PositionX="0.6361308266446E-1"
+%PositionY="0.3963815353338E-1" PositionZ="-0.397897146E-5"/>
+
 zpos = 100; %extract this position from metadata
 %here go the commands to leica-------------------------------------------------
 
+t2 = tcpip('128.32.173.234')
+fopen(t2)
 command = ['/cli:Leica /app:matrix /sys:0 /cmd:setposition /typ:absolute',...
             '/dev:zdrive /unit:microns /zpos:', num2str(zpos)];
 fwrite(t2, command);
