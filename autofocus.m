@@ -1,4 +1,5 @@
 close all;
+format long;
 
 %here i read in the data--------------------------------------------------
 n_stacks = 200;
@@ -18,8 +19,8 @@ for j = 1:n_stacks
     n_spotss = [];
     for i = 1:zsize
             xml = [imdir, '\metadata\image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000.ome.xml'];
-            cin = fileread(c);
-            if i > 10
+            xmltext = fileread(xml);
+            if i >= 10
                 tif = [imdir, 'image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000--Z',num2str(i),'--C01.ome.tif'];
             else 
                 tif = [imdir, 'image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000--Z0',num2str(i),'--C01.ome.tif'];
@@ -39,20 +40,17 @@ for j = 1:n_stacks
     end
     [max, max_index] = max(n_spotss);
 
-    %this is the string in the xml metadata for objective position
-    %<OriginalMetadata ID="OriginalMetadata:295" Name="Data - Image -
-    %Attachment - ATLConfocalSettingDefinition - AdditionalZPositionList - AdditionalZPosition - ZPosition" Value="0.004369592575"/> 
-
-    %and this is the string in the metadata for galvo
-    %<StagePosition PositionX="0.6361308266446E-1"
-    %PositionY="0.3963815353338E-1" PositionZ="-0.397897146E-5"/>
-
-    zpos = 100; %extract this position from metadata
+    expression = '(?<=AdditionalZPosition - ZPosition" Value=")(0.00\d*)';
+    zobj = str2double(regexp(xmltext, expression, 'match'));
+    expressiongalvo = '(?:StagePosition PositionX=".*" PositionY=".*" PositionZ=")(-?\d\.\d*E-?\d)';
+    zgalvo = regexp(xmltext, expressiongalvo, 'tokens');
+    zgalvo = str2double(zgalvo{1});
+    
     %here go the commands to leica-------------------------------------------------
 
 
     command = ['/cli:Leica /app:matrix /sys:0 /cmd:setposition /typ:absolute',...
-                '/dev:zdrive /unit:microns /zpos:', num2str(zpos)];
+                '/dev:zdrive /unit:microns /zpos:', zobj];
     fwrite(connection, command);
 end
 fclose(connection);
