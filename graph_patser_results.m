@@ -22,7 +22,7 @@ function graph_patser_results(in)
     end
     expression01 = '(\d*\.\d)(?=   \=erocs)';
     s01 = regexp(tinverse, expression01, 'tokens'); 
-    values = zeros(1,length(s01));
+    values =  zeros(1,length(s01));
     for i = 1:length(s01)
         s = s01{i};
         values(i) = str2double(flip(s{1}));
