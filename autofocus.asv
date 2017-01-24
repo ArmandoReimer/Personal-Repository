@@ -13,15 +13,8 @@ for j = 1:n_stacks
 
     expdir = dir('D:\MatrixScreenerImages\3.3.0_9757');
     stackpath = [expdir(end), '\b--S00\c--U00--V00\d--X00--Y00\AF'];
-    xml = [stackpath, '\metadata\image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000.ome.xml'];
-    xmltext = fileread(xml);
-    expressiongalvo = '(?:StagePosition PositionX=".*" PositionY=".*" PositionZ=")(-?\d\.\d*E-\d)';
-    mid_zgalvo = regexp(xmltext, expressiongalvo, 'tokens');
-    mid_zgalvo = str2double(mid_zgalvo{1});
-    expressionobj = '(?<=AdditionalZPosition - ZPosition" Value=")(0.00\d*)';
-    zobj = str2double(regexp(xmltext, expressionobj, 'match')); %this value is the same for all the files, so may as well retrieve it from the final slice
-  
     zsize = 21;
+    zgalvos = zeros(1, zsize);
 
     %here i do the algorithm-------------------------------------------------
     
@@ -48,8 +41,17 @@ for j = 1:n_stacks
     
     [max, max_index] = max(n_nuclei_list);
     z_step = .5; %in the future, i'll parse this from the xml but currently lazy
-    mid_plane = (zsize+1) / 2;
+        mid_plane = (zsize+1) / 2;
+
+    xml = [stackpath, '\metadata\image--L0000--S00--U00--V00--J19--E00--O00--X01--Y01--T0000.ome.xml'];
+    xmltext = fileread(xml);
+    expressiongalvo = '(?:StagePosition PositionX=".*" PositionY=".*" PositionZ=")(-?\d\.\d*E-\d)';
+    mid_zgalvo = regexp(xmltext, expressiongalvo, 'tokens');
+    mid_zgalvo = str2double(mid_zgalvo{1});
     max_zgalvo = mid_zgalvo - (mid_plane - max_index)*0.5;
+    expressionobj = '(?<=AdditionalZPosition - ZPosition" Value=")(0.00\d*)';
+    zobj = str2double(regexp(xmltext, expressionobj, 'match')); %this value is the same for all the files, so may as well retrieve it from the final slice
+    mid_plane = (zsize+1) / 2;
     delta_z = mid_zgalvo - max_zgalvo;
     new_zobj = zobj + delta_z;
     
