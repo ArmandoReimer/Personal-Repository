@@ -1,0 +1,20 @@
+
+TF_whaeer
+COMMAND LINE: D:\Data\Armando\Personal-Repository\Patser\patser-v3e.exe -m D:\Data\Myron\Other\Patser\1A3_tests\test3\all_pwms.txt -f D:\Data\Armando\livemRNA\Data\Dropbox\SyntheticEnhancersMS2\lacZSequence.txt -A a:t 3 c:g 2
+
+File containing the matrix: D:\Data\Myron\Other\Patser\1A3_tests\test3\all_pwms.txt
+File containing the sequence information: D:\Data\Armando\livemRNA\Data\Dropbox\SyntheticEnhancersMS2\lacZSequence.txt
+Type of matrix: alignment
+Total pseudo-counts added to the elements of the alignment matrix: 1
+
+Range for approximating a weight matrix with integers: 10000
+Minimum score for calculating p-values: 0
+Treat unrecognized symbols as discontinuities in the sequence.
+Print ALL the scores
+
+***** Information for the alphabet from the command line. *****
+letter   1: A (complement: T)  prior frequency = 0.300000
+letter   2: C (complement: G)  prior frequency = 0.200000
+letter   3: G (complement: C)  prior frequency = 0.200000
+letter   4: T (complement: A)  prior frequency = 0.300000
+

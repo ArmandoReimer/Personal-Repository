@@ -2,7 +2,6 @@ function integrateFluorescenceOverAP(dataset)
     
     data = LoadMS2Sets(dataset);
     cum = zeros(0,41);
-    data(3) = [];
     for j = 1:length(data)
         fluo = data(j).MeanVectorAP;
         fluo(isnan(fluo)) = 0;
@@ -33,15 +32,17 @@ function integrateFluorescenceOverAP(dataset)
     for i = 1:length(data)
         plot(ap, cum(i, :), 'LineWidth', 1)
     end
-% %    legend('mean', 'data set 1', 'data set 2',...
-%         'data set 3', 'data set 4', 'data set 5')
+    legend('mean', 'data set 2',...
+        'data set 3', 'data set 4', 'data set 5')
     xlim([.1, .8])
     title('1A3 Integrated Intensity over AP',...
         'FontName', 'Calibri', 'FontWeight', 'bold','FontSize',40)
-    xlabel('% EL','FontName',...
+    xlabel('Fraction EL','FontName',...
         'Calibri', 'FontWeight', 'bold','FontSize',40)
     ylabel('Intensity (A.U.)'...
         ,'FontName', 'Calibri', 'FontWeight', 'bold','FontSize',40)
+    standardizeFigure
+
     %hold on
     %these next two lines are supposed to plot a logistic fit. Will update
     %this later if needed.
@@ -50,18 +51,19 @@ function integrateFluorescenceOverAP(dataset)
 %     hold off
     
     
-    %plot the same thing with standard errors 
-    figure(2)
-    errorbar(ap, cummean, cumstde)
-    hold on
-    for i = 1:length(data)
-        plot(ap, cum(i, :))
-    end
-    xlim([.2, .8])
-    ylim([0, 5000])
-    title('1A3 Integrated Intensity over AP')
-    xlabel('% EL')
-    ylabel('Intensity (A.U.)')
+%     %plot the same thing with standard errors 
+%     figure(2)
+%     errorbar(ap, cummean, cumstde, 'LineWidth', 5)
+%     hold on
+% %     for i = 1:length(data)
+% %         plot(ap, cum(i, :))
+% %     end
+%     xlim([.2,.8])
+%     ylim([0, 500])
+%     title('1A3 Integrated Intensity over AP during NC13')
+%     xlabel('Fraction embryo length')
+%     ylabel('Intensity (A.U.)')
+%     standardizeFigure
 
 %     figure(3)
 %     l = 120./cummean.^(-1);
@@ -112,4 +114,25 @@ function integrateFluorescenceOverAP(dataset)
 %     %hold on
 %     %plot(data(1).APbinID,y)
 % end
+
+figure(3)
+    g = zeros(length(ap), 1);
+    ap = data(1).APbinID;       
+    for i = 1:length(data)
+        f = data(i).EllipsesOnAP(:,2)./data(i).TotalEllipsesAP(:,2);
+        g = g + f;
+        plot(ap, f, 'LineWidth', 1)
+        hold on
+    end
+    plot(ap, g/length(data), 'LineWidth', 5)
+   legend('data set 2',...
+        'data set 3', 'data set 4', 'data set 5', 'mean')
+    xlim([.1, .8])
+    title('Fraction On',...
+        'FontName', 'Calibri', 'FontWeight', 'bold','FontSize',40)
+    xlabel('Fraction EL','FontName',...
+        'Calibri', 'FontWeight', 'bold','FontSize',40)
+    ylabel('Intensity (A.U.)'...
+        ,'FontName', 'Calibri', 'FontWeight', 'bold','FontSize',40)
+    standardizeFigure
 end
