@@ -1,6 +1,6 @@
-function traceSimulator(varargin)
+function simulateSingleTraces(params,varargin)
 %
-% traceSimulator(varargin)
+% simulateSingleTraces(varargin)
 %
 % DESCRIPTION
 % Generates noisy single traces of a hunchback-like promoter and averages them. 
@@ -32,42 +32,8 @@ displayAverage = 0;
             displayAverage = 1;
         end
     end
-    
-    close all force;
-    
-    %initalize the parameter structure and set the default parameters
-    params = struct();
-    %experimental parameters
-    params.TIME_PER_FRAME = 9; %s
-    params.NOISE_SCALE_EXP = 0; %au
-    params.MEAN_POL_LOADING_RATE = 5; %pol/min
-    params.MEAN_POL_OFFLOADING_RATE = 5; %pol/min
-    params.MEAN_BACKGROUND = 0;
-    params.DETECTION_LIMIT = 0; %au
-    params.MCP_INTENSITY = .2; %au / frame / mcp-gfp
-    
-    params.FLUO_CALIBRATION = 25; %au / polymerase
-    
+       
    
-    
-    %biological parameters
-    params.REPORTER_LENGTH = 3; %kb. this is ~lacZ
-    params.N_LOOPS = 23; %v7
-    params.LOOP_SIZE = .0583; %kb. ms2v1, v5 or v7
-    params.GENE_LENGTH = params.REPORTER_LENGTH + params.LOOP_SIZE*params.N_LOOPS;
-    params.ELON_RATE = 2.5; %kb/min
-    params.LOOP_RATE = 47; %loops / min. (.783 loops/s)
-    params.T_INIT = 3; %min
-    params.T_FIN = 10; %min
-    params.INTERPHASE = 15; %min
-    params.POL_FOOTPRINT = .04; %kbp
-    params.N_POLS = round(params.GENE_LENGTH / params.POL_FOOTPRINT);
-    params.NOISE_SCALE_BIO = 0; %au
-    params.FRACTION_ACTIVE = 1;
-    
-    %simulation parameters
-    params.nTraces = 100;
-    
     %perform the simulation
     
     %iterate over loading rates
@@ -77,7 +43,6 @@ displayAverage = 0;
 %     rate = 10*sigmf(ap, [3 6]);
 % %     plot(ap*1000, rate)
 %     for i = 1:length(rate)
-%         close all force;
 %         paramsIter.MEAN_POL_LOADING_RATE = rate(i);
 %         paramsIter.MEAN_POL_OFFLOADING_RATE = rate(i);
 %         [fluo(i), trunc(i)] = averageSimulatedTraces(paramsIter, 1);
@@ -205,7 +170,6 @@ function [timeElapsed, fluos, singleFluosTrunc] = simulateTrace(params, displayS
         pause(3) %leave 6 seconds to view the figure
     end
     
-    close all force
     
 end
 
