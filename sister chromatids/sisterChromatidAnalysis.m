@@ -1,5 +1,5 @@
-load 'D:\Data\Armando\livemRNA\Data\Dropbox\DynamicsResults\2015-05-31-89B8-3-P2P\Spots.mat'
-load 'D:\Data\Armando\livemRNA\Data\Dropbox\DynamicsResults\2015-05-31-89B8-3-P2P\FrameInfo.mat'
+load 'E:\Armando\LivemRNA\Data\Dropbox\DynamicsResults\2015-05-31-89B8-3-P2P\Spots.mat'
+load 'E:\Armando\LivemRNA\Data\Dropbox\DynamicsResults\2015-05-31-89B8-3-P2P\FrameInfo.mat'
 distancelist = [];
 amplist = [];
 framesdup = [];
