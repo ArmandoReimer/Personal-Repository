@@ -1,4 +1,9 @@
-
+% Define some colors
+yw = [234 194 100]/256; % yellow
+bl = [115 143 193]/256; % blue
+rd = [213 108 85]/256; % red
+gr = [191 213 151]/256; % green
+br = [207 178 147]/256; % brown
 % f = openfig('E:\Armando\Figures\fraction_1A3_error.fig');
 % f = openfig('E:\Armando\Figures\initial_rate_1A3.fig');
 
