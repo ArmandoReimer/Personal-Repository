@@ -73,8 +73,10 @@ for i=1:length(PlotHandle)
         
     else
         %Why do I have this auto thingy?
-        if isempty(strmatch(get(PlotHandle(i),'Color'),'auto'))
-            ChangeColor(PlotHandle(i),'Color')
+        try
+            if isempty(strmatch(get(PlotHandle(i),'Color'),'auto'))
+                ChangeColor(PlotHandle(i),'Color')
+            end
         end
 
         if isempty(strmatch(get(PlotHandle(i),'MarkerEdgeColor'),'auto'))

@@ -1,4 +1,4 @@
-function h = dogHists(Prefix, nBins, varargin)
+function h = segmentationFreeMS2Analysis(Prefix, nBins, varargin)
     
 %color is the bin color accepted as a string within one element cell.
 %use an empty cell as default. accepted colors- 'red', 'yellow', 'cyan', 'magenta',
@@ -15,13 +15,16 @@ function h = dogHists(Prefix, nBins, varargin)
        end
     end
     
-    dogDirPath = ['E:\Armando\LivemRNA\Data\ProcessedData\',Prefix,'_\dogs'];
+    dogDirPath = ['E:\SyntheticEnhancers\Data\ProcessedData\',Prefix,'_\dogs'];
     dogDir = dir([dogDirPath, filesep,'DOG*.tif']);
     numIm = length(dogDir); 
     vals = [];
     for i = 3:numIm
         dog = imread([dogDirPath, filesep, dogDir(i).name]);
-        vals(i) = log(double(scale*max(dog(:))) + 1);
+        %10k is the offset in most datasets. some might have offset 1000.
+        %this is subtracted for aesthetics. 
+        dog = dog - 10000;
+        vals(i) = log10(double(scale*max(dog(:))) + 1);
 %         vals(i) = double(scale*max(dog(:)));
 
         %imshow(dog, []);
@@ -29,9 +32,9 @@ function h = dogHists(Prefix, nBins, varargin)
     vals(vals==0) = NaN;
     h = histogram(vals,nBins,'Normalization','probability', 'facealpha', 1);
     set(gca,'YScale','log')
-    xlabel('ln(max DoG intensity + 1) (au)')
+    xlabel('log(max DoG intensity + 1) (au)')
     ylabel('frequency')
-    title(Prefix, 'Interpreter', 'latex')
+    title(Prefix, 'Interpreter', 'none')
     standardizeFigure(gca, [], color{1}, 'fontSize', 14);
     
   
