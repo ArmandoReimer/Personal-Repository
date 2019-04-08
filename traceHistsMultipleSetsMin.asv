@@ -13,27 +13,26 @@ function traceHistsMultipleSetsMin()
     fluo = [];
     fluoMin = [];
     
-    collectData(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
-%     for dataSet = 1:nSets
-%         
-%         Prefix{dataSet} = d(dataSet).Prefix;
-%         data = load(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
-%         if iscell(data.CompiledParticles)
-%             CP = data.CompiledParticles{channel};
-%         else
-%             CP = data.CompiledParticles;
-%         end
-%    
-%         for i = 1:length(CP)
-%             for j = 1:length(CP(i).Frame)
-%                 off = CP(i).Off(j)*area;
-%                 fluo = [fluo, CP(i).Fluo(j) + off];
-%             end
-%             offMin = min(CP(i).Off);
-%             fluoMin = [fluoMin, min(CP(i).Fluo) + offMin]; %#ok<AGROW>
-%         end    
-%         
-%     end
+    for dataSet = 1:nSets
+        
+        Prefix{dataSet} = d(dataSet).Prefix;
+        data = load(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
+        if iscell(data.CompiledParticles)
+            CP = data.CompiledParticles{channel};
+        else
+            CP = data.CompiledParticles;
+        end
+   
+        for i = 1:length(CP)
+            for j = 1:length(CP(i).Frame)
+                off = CP(i).Off(j)*area;
+                fluo = [fluo, CP(i).Fluo(j) + off];
+            end
+            offMin = min(CP(i).Off);
+            fluoMin = [fluoMin, min(CP(i).Fluo) + offMin]; %#ok<AGROW>
+        end    
+        
+    end
     
     nBins = 15;
     mFig = figure();
@@ -53,28 +52,27 @@ function traceHistsMultipleSetsMin()
     fluo = [];
     fluoMin = [];
     
-    collectData(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
-%     for dataSet = 1:nSets
-%         
-%         Prefix{dataSet} = d(dataSet).Prefix;
-%         data = load(['E:\Armando\LivemRNA\Data\Dropbox\SyntheticEnhancersMS2\',Prefix{dataSet},'\CompiledParticles.mat']);
-%         channel = 1; 
-%         if iscell(data.CompiledParticles)
-%             CP = data.CompiledParticles{channel};
-%         else
-%             CP = data.CompiledParticles;
-%         end
-%    
-%         for i = 1:length(CP)
-%             for j = 1:length(CP(i).Frame)
-%                 off = CP(i).Off(j)*area;
-%                 fluo = [fluo, CP(i).Fluo(j) + off];
-%             end
-%             offMin = min(CP(i).Off)*area;
-%             fluoMin = [fluoMin, min(CP(i).Fluo) + offMin];
-%         end    
-%         
-%     end
+    for dataSet = 1:nSets
+        
+        Prefix{dataSet} = d(dataSet).Prefix;
+        data = load(['E:\Armando\LivemRNA\Data\Dropbox\SyntheticEnhancersMS2\',Prefix{dataSet},'\CompiledParticles.mat']);
+        channel = 1; 
+        if iscell(data.CompiledParticles)
+            CP = data.CompiledParticles{channel};
+        else
+            CP = data.CompiledParticles;
+        end
+   
+        for i = 1:length(CP)
+            for j = 1:length(CP(i).Frame)
+                off = CP(i).Off(j)*area;
+                fluo = [fluo, CP(i).Fluo(j) + off];
+            end
+            offMin = min(CP(i).Off)*area;
+            fluoMin = [fluoMin, min(CP(i).Fluo) + offMin];
+        end    
+        
+    end
     
     m = histogram(mAx,fluoMin,nBins,'Normalization','pdf', 'facealpha', .8,'BinWidth', 30);
     hold on
@@ -92,7 +90,7 @@ function traceHistsMultipleSetsMin()
     function collectData(path)  
         for dataSet = 1:nSets 
             Prefix{dataSet} = d(dataSet).Prefix;
-            data = load(path);
+            data = load(['E:\Armando\LivemRNA\Data\Dropbox\SyntheticEnhancersMS2\',Prefix{dataSet},'\CompiledParticles.mat']);
             channel = 1; 
             if iscell(data.CompiledParticles)
                 CP = data.CompiledParticles{channel};
