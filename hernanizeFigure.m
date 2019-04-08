@@ -7,17 +7,22 @@ br = [207 178 147]/256; % brown
 
 ax = gca;
 ax.Color = 'none';
-pl = ax.Children;
-pl.Marker = 'o';
-pl.MarkerEdgeColor = 'none';
-pl.MarkerFaceColor = rd;
-pl.MarkerSize = 8;
-pl.LineWidth = .5;
 ax.LineWidth = .5;
-ax.TickLength = [0.01, 0.01];
+ax.TickLength = [0.01, 0.025];
 ax.TickDir = 'in';
-pl.LineStyle = '-';
+
+for i = 1:length(ax.Children)
+    
+    pl = ax.Children(i);
+    pl.Marker = 'o';
+    pl.MarkerEdgeColor = 'none';
+    pl.MarkerFaceColor = rd;
+    pl.MarkerSize = 8;
+    pl.LineWidth = .5;
+    pl.LineStyle = '-';
+
+end
 
 
-StandardFigure(pl, ax);
+StandardFigure(ax.Children, ax);
 
