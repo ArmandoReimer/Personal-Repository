@@ -1,11 +1,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function traceHistsMultipleSetsMin()
 
+    optionalResults = 'SyntheticEnhancersNoCurationResults';
+    
     area = 437;
     channel = 1; 
 
     dataset = 'E1_nocuration'; 
-    d = LoadMS2Sets(dataset);
+    d = LoadMS2Sets(dataset, optionalResults);
 
     
     nSets = length(d);
@@ -46,7 +48,7 @@ function traceHistsMultipleSetsMin()
     
     
     dataset = 'mcp_opt_nocuration';
-    d = LoadMS2Sets(dataset);
+    d = LoadMS2Sets(dataset, optionalResults);
 
     nSets = length(d);
     Prefix = cell(1, nSets);

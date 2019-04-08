@@ -1,11 +1,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function traceHistsMultipleSetsMin()
 
+    optionalResults = 'SyntheticEnhancersNoCurationResults';
+    
     area = 437;
     channel = 1; 
 
     dataset = 'E1_nocuration'; 
-    d = LoadMS2Sets(dataset);
+    d = LoadMS2Sets(dataset, optionalResults);
 
     
     nSets = length(d);
@@ -13,26 +15,27 @@ function traceHistsMultipleSetsMin()
     fluo = [];
     fluoMin = [];
     
-    for dataSet = 1:nSets
-        
-        Prefix{dataSet} = d(dataSet).Prefix;
-        data = load(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
-        if iscell(data.CompiledParticles)
-            CP = data.CompiledParticles{channel};
-        else
-            CP = data.CompiledParticles;
-        end
-   
-        for i = 1:length(CP)
-            for j = 1:length(CP(i).Frame)
-                off = CP(i).Off(j)*area;
-                fluo = [fluo, CP(i).Fluo(j) + off];
-            end
-            offMin = min(CP(i).Off);
-            fluoMin = [fluoMin, min(CP(i).Fluo) + offMin]; %#ok<AGROW>
-        end    
-        
-    end
+    collectData(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
+%     for dataSet = 1:nSets
+%         
+%         Prefix{dataSet} = d(dataSet).Prefix;
+%         data = load(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
+%         if iscell(data.CompiledParticles)
+%             CP = data.CompiledParticles{channel};
+%         else
+%             CP = data.CompiledParticles;
+%         end
+%    
+%         for i = 1:length(CP)
+%             for j = 1:length(CP(i).Frame)
+%                 off = CP(i).Off(j)*area;
+%                 fluo = [fluo, CP(i).Fluo(j) + off];
+%             end
+%             offMin = min(CP(i).Off);
+%             fluoMin = [fluoMin, min(CP(i).Fluo) + offMin]; %#ok<AGROW>
+%         end    
+%         
+%     end
     
     nBins = 15;
     mFig = figure();
@@ -45,34 +48,35 @@ function traceHistsMultipleSetsMin()
     
     
     dataset = 'mcp_opt_nocuration';
-    d = LoadMS2Sets(dataset);
+    d = LoadMS2Sets(dataset, optionalResults);
 
     nSets = length(d);
     Prefix = cell(1, nSets);
     fluo = [];
     fluoMin = [];
     
-    for dataSet = 1:nSets
-        
-        Prefix{dataSet} = d(dataSet).Prefix;
-        data = load(['E:\Armando\LivemRNA\Data\Dropbox\SyntheticEnhancersMS2\',Prefix{dataSet},'\CompiledParticles.mat']);
-        channel = 1; 
-        if iscell(data.CompiledParticles)
-            CP = data.CompiledParticles{channel};
-        else
-            CP = data.CompiledParticles;
-        end
-   
-        for i = 1:length(CP)
-            for j = 1:length(CP(i).Frame)
-                off = CP(i).Off(j)*area;
-                fluo = [fluo, CP(i).Fluo(j) + off];
-            end
-            offMin = min(CP(i).Off)*area;
-            fluoMin = [fluoMin, min(CP(i).Fluo) + offMin];
-        end    
-        
-    end
+    collectData(['E:\SyntheticEnhancers\Data\SyntheticEnhancersNoCurationResults\',Prefix{dataSet},'\CompiledParticles.mat']);
+%     for dataSet = 1:nSets
+%         
+%         Prefix{dataSet} = d(dataSet).Prefix;
+%         data = load(['E:\Armando\LivemRNA\Data\Dropbox\SyntheticEnhancersMS2\',Prefix{dataSet},'\CompiledParticles.mat']);
+%         channel = 1; 
+%         if iscell(data.CompiledParticles)
+%             CP = data.CompiledParticles{channel};
+%         else
+%             CP = data.CompiledParticles;
+%         end
+%    
+%         for i = 1:length(CP)
+%             for j = 1:length(CP(i).Frame)
+%                 off = CP(i).Off(j)*area;
+%                 fluo = [fluo, CP(i).Fluo(j) + off];
+%             end
+%             offMin = min(CP(i).Off)*area;
+%             fluoMin = [fluoMin, min(CP(i).Fluo) + offMin];
+%         end    
+%         
+%     end
     
     m = histogram(mAx,fluoMin,nBins,'Normalization','pdf', 'facealpha', .8,'BinWidth', 30);
     hold on
@@ -90,7 +94,7 @@ function traceHistsMultipleSetsMin()
     function collectData(path)  
         for dataSet = 1:nSets 
             Prefix{dataSet} = d(dataSet).Prefix;
-            data = load(['E:\Armando\LivemRNA\Data\Dropbox\SyntheticEnhancersMS2\',Prefix{dataSet},'\CompiledParticles.mat']);
+            data = load(path);
             channel = 1; 
             if iscell(data.CompiledParticles)
                 CP = data.CompiledParticles{channel};
