@@ -1,6 +1,6 @@
 function runDataSetsForNoCurationAnalysis()
     
-    lowThresh = 1020;
+    lowThresh = 1007;
     highThresh = 1022;
     resultsFolder = 'SyntheticEnhancersNoCurationResults';
     
@@ -14,15 +14,15 @@ function runDataSetsForNoCurationAnalysis()
 %     runAll(E1Prefix);
 %     
     function runAll(prefixCell)
-        for i = 9:length(prefixCell)
+        for i = 4:length(prefixCell)
             disp(['running dataset: ', num2str(i), ', ',prefixCell{i}])
             if i ~=4
             filterMovie(prefixCell{i}, 'keepPool',...
                 'optionalResults', resultsFolder,...
-                'nWorkers', 20, 'highPrecision')
+                 'highPrecision', 'nWorkers', 1, 'customFilter', 'Difference_of_Gaussian_3D', {3, 10});
             end
-            segmentSpots(prefixCell{i}, lowThresh, 'Shadows', 2, 'keepPool', 'intScale', 2,...
-                'optionalResults', resultsFolder,'nWorkers', 20, 'keepProcessedData', 'fit3D')
+            segmentSpots(prefixCell{i},lowThresh, 'Shadows', 2, 'intScale', 1.5,...
+                'optionalResults', resultsFolder,'nWorkers', 8, 'keepProcessedData', 'fit3D')
             TrackmRNADynamics(prefixCell{i},'optionalResults',  resultsFolder,'noRetracking')
 %                         FindAPAxisFullEmbryo(prefixCell{i}, 'optionalResults',  resultsFolder, 'CorrectAxis')
             AddParticlePosition(prefixCell{i}, 'optionalResults',  resultsFolder, 'yToManualAlignmentPrompt')
