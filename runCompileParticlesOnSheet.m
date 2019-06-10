@@ -10,8 +10,8 @@ function runCompileParticlesOnSheet(varargin)
              prefix = prefixCell{i};
              disp(prefix);
              disp(num2str(i));
-             fit3DGaussiansToAllSpots(prefix);
-             CompileParticles(prefix, 'SkipAll','ApproveAll', 'MinTime', 0, 'MinParticles', 1, 'minBinSize', .3, 'intArea', 270, 'edgeWidth', 0)
+%              fit3DGaussiansToAllSpots(prefix);
+             CompileParticles(prefix, 'SkipAll','ApproveAll', 'MinTime', 0, 'MinParticles', 1, 'minBinSize', .3, 'intArea', 270)
         end
         
     end
