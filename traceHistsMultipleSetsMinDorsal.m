@@ -1,4 +1,4 @@
-function traceHistsMultipleSetsMin(mcpData, noRepData)
+function traceHistsMultipleSetsMin(tab1DataType, tab2DataType, resultsFolder)
 %  traceHistsMultipleSetsMin()
 %
 % DESCRIPTION
@@ -18,33 +18,40 @@ function traceHistsMultipleSetsMin(mcpData, noRepData)
 %
 % Documented by: AR
 close all;
+
+if ischar(tab1DataType)
+    [tab1Data, Prefixes1, resultsFolder] = LoadMS2Sets(tab1DataType);
+    [tab2Data, Prefixes2, ~] = LoadMS2Sets(tab2DataType);
+else
+    tab1Data = tab1DataType;
+    tab2Data = tab2DataType;
+    tab1DataType = inputname(1);
+    tab2DataType = inputname(2);
+end
+
 area = 437;
 channel = 1;
 nPlanes = 1;
-% mFig = figure();
-% mAx = axes(mFig);
-%     dataset = 'E1_nocuration';
 
-% mcpData = LoadMS2Sets('mcp_opt','optionalResults','');
-mcpStruct = collectData(mcpData, '1DG', '');
-% noRepData = LoadMS2Sets('noReporter_opt','optionalResults','');
-% noRepData = LoadMS2Sets('noReporter_nocuration','optionalResults','SyntheticEnhancersNoCurationResults');
-% noReporterStruct = collectData(noRepData,'noReporter_nocuration','SyntheticEnhancersNoCurationResults' );
-% noReporterStruct = collectData(noRepData,'noReporter_opt', '' );
+tab1struct = collectData(tab1Data, '0DG', '');
+tab2struct = collectData(tab2Data, '1DG', '');
 
-histFields = fieldnames(mcpStruct);
+histFields = fieldnames(tab1struct);
 
+fig1 = figure();
+fig2 = figure();
+ax = {};
 for f = 1:length(histFields)
-    subplot(6,6,f);
+    ax{f} = subplot(6,6,f);
 %     if contains(histFields{f}, 'dog')
 %         wid = .001;
 %     else
 %         wid = .2;
 %     end
-    plotData(mcpStruct.(histFields{f}));
-%     plotData(noReporterStruct.(histFields{f}));
-    if f == 1
-        leg = legend('reporter', 'no reporter');
+    plotData(tab1struct.(histFields{f}), ax{f});
+    plotData(tab2struct.(histFields{f}), ax{f});
+    if f == length(histFields)
+        leg = legend(tab1DataType, tab2DataType);
     end
     xlabel('log intensity (au)')
     ylabel('probability')
@@ -57,7 +64,7 @@ for f = 1:length(histFields)
 %     end
 %     ylim([.001, 2])
     hold('off')
-    standardizeFigure(gca, leg);
+%     standardizeFigure(gca, leg);
 end
 
 % figure(2)
@@ -115,23 +122,23 @@ histStruct = struct(...
     'ampdog3Sum', [], 'totalEllipsesNC12', []);
 
 for dataSet = 1:nSets
-    Prefix = d(dataSet).Prefix;
-    if isempty(optionalResults)
-        path = ['E:\Armando\LivemRNA\Data\Dropbox\SyntheticEnhancersMS2\',Prefix,'\CompiledParticles.mat'];
-    else
-        path = ['E:\SyntheticEnhancers\Data\', optionalResults,filesep,Prefix,'\CompiledParticles.mat'];
-    end
-    data = load(path);
+
+    data = d(dataSet).Particles;
+    
     channel = 1;
+    
     if iscell(data.CompiledParticles)
         CP = data.CompiledParticles{channel};
     else
         CP = data.CompiledParticles;
     end
+    
     nc11 = data.nc11;
     nc12 = data.nc12;
     nc13 = data.nc13;
+    
     histStruct.totalEllipsesNC12 = sum(data.TotalEllipsesAP(:,2));
+    
     for i = 1:length(CP)
         offMin = min(CP(i).Off*nPlanes)*area;
         histStruct.fluoMin = [histStruct.fluoMin, min(CP(i).Fluo) + offMin];
@@ -194,11 +201,11 @@ end
 
 end
 
-function plotData(input, varargin)
+function plotData(histData, axis, varargin)
 
-input(~isreal(input)) = NaN;
-input = real(input);
-input(input==0) = NaN;
+histData(~isreal(histData)) = NaN;
+histData = real(histData);
+histData(histData==0) = NaN;
 
 % totalEllipses = varargin{1};
 % if ~isempty(varargin)
@@ -207,7 +214,8 @@ input(input==0) = NaN;
 % else
 % h = histogram(log(input), 'Normalization','count', 'facealpha', .8, 'BinWidth', .5);
 try
-h = histogram(log(input), 'Normalization','probability', 'facealpha', .8);
+%     h = histogram(log(histData), 'Normalization','probability', 'facealpha', .8);
+    h = histogram(histData, 'Normalization','probability', 'facealpha', .6);
 end
 
 %     [counts, edges] = histcounts(log(input), 'Normalization','count', 'BinWidth', .5);
@@ -216,7 +224,7 @@ end
 %     bar(bin,N);
 %     h.Values = h.Values / sum(totalEllipses);
 % end
-set(gca,'YScale','log');
+set(axis,'YScale','log');
 % set(gca,'XScale','log');
 hold on
 % try

@@ -9,20 +9,19 @@ function outDNASeq = makeSynonymous(inSeq, forbidden, writePath)
 %final construct. e.g. don't include digest sites necessary for cloning. 5'
 %splice junctions are appended to this list automatically. 
 
-dmelfiveprimesplice = {'AAGGTAAGT','AAGGTGAGT','CAGGTAAGT','CAGGTGAGT'}; 
+dmelfiveprimesplice = {'AAGGTAAGT','AAGGTGAGT','CAGGTAAGT','CAGGTGAGT',...
+    'AGGTAAGC', 'AGGTTAGT', 'AGGTGCGT'}; 
 %try not to introduce new introns. 5' is easier to deal with than 3' splice junction
 %other splice sites to consider are the branch consensus and polypyrimidine
 %tracts. for now, just looking at 5' junction seems sufficient. CTAAT is
 %the branchpoint consensus and it has distance requirements from the splice
 %junctions. 
 
-forbidden = [forbidden, dmelfiveprimesplice];
+load('E:\Armando\Personal-Repository\restrictionEnzymeDatabase.mat', 'digestList');
 
-%%
-%validate input sequence
-if mod(length(inSeq), 3) ~= 0
-    error('bad input sequence.')
-end
+forbidden = digestList(2,:);
+
+forbidden = [forbidden, dmelfiveprimesplice];
 
 %%
 codonTable = load('E:\Armando\Personal-Repository\codonTable.mat');
@@ -68,14 +67,15 @@ if ~isequal(length(inSeq)*3, length(outDNASeq))
 end
 %%
 %validate %GC
-tolerance = .1; %i made this number up. AR
+lowerGC = .5;
+upperGC = .55;
 okGC = .5; %i made this up too.
-bounds = [okGC - tolerance, okGC + tolerance];
+bounds = [lowerGC, upperGC];
 
 GCfreq = sum(outDNASeq == 'G' | outDNASeq == 'C') / length(outDNASeq);
 
 if GCfreq < bounds(1) | GCfreq > bounds(2)
-    disp('GC content weird. Trying again.')
+%     disp('GC content weird. Trying again.')
     outDNASeq = makeSynonymous(inSeq, forbidden, writePath);
 end
 

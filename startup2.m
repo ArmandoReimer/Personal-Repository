@@ -93,3 +93,19 @@ colorDictFields = fields(colors);
 
 
 surfmax = imread('E:\Armando\LivemRNA\Data\Dropbox\DorsalSyntheticsDropbox\2019-05-05-1Dg_embryo1\DV\surf_max.tif');
+
+Prefixes = {'2019-07-04-0Dg_8_embryo2', '2019-07-04-0Dg_8_embryo3', '2019-07-04-0Dg_8_embryo4',...
+    '2019-07-04-0Dg_8_embryo5', '2019-07-05-0Dg_8_embryo6',  '2019-07-05-0Dg_8_embryo7',...
+     '2019-07-05-0Dg_8_embryo8',  '2019-07-05-0Dg_8_embryo9'};
+for i = 1:length(Prefixes)
+    Prefix = Prefixes{i};
+    AddParticlePosition(Prefixes{i}, 'yToManualAlignmentPrompt')
+    CompileParticles(Prefixes{i}, 'SkipAll', 'ApproveAll', 'minBinSize', .3, 'MinParticles', 0);
+%      alignCompiledParticlesByAnaphase(Prefix);
+%     averageDV(Prefix);
+end
+%disable mtree
+%com.mathworks.services.Prefs.setBooleanPref('CodeParserServiceOn',false)
+%enable mtree
+%com.mathworks.services.Prefs.setBooleanPref('CodeParserServiceOn',true)
+%com.mathworks.services.Prefs.setIntegerPref('CodeParserServiceFileSizeLimit',0)

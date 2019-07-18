@@ -7,6 +7,7 @@ function copyPlot(ax1, ax2)
 
     hold(ax2, 'on')
     errorbar(ax2, x1, y1, e1);
+    plot(ax2, x1, y1, '-o')
     standardizeFigure(ax2, [])
 
 end

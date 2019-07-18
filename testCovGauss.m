@@ -21,5 +21,5 @@ singleGaussianV2 = @(A, r, rho, sigma, offset) A*exp(-1/(2*(1-rho^2))*(...
         - offset - offset_x*x - offset_y*y...
         - double(imSnippet);
     
-    lsqnonlin(sg, inits2{:})
+    lsqnonlin(sg, inits2)
 end
