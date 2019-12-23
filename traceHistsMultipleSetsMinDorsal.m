@@ -21,12 +21,9 @@ close all;
 
 if ischar(tab1DataType)
     [tab1Data, Prefixes1, resultsFolder] = LoadMS2Sets(tab1DataType);
-    [tab2Data, Prefixes2, ~] = LoadMS2Sets(tab2DataType);
 else
     tab1Data = tab1DataType;
-    tab2Data = tab2DataType;
     tab1DataType = inputname(1);
-    tab2DataType = inputname(2);
 end
 
 area = 437;
@@ -34,12 +31,10 @@ channel = 1;
 nPlanes = 1;
 
 tab1struct = collectData(tab1Data, '0DG', '');
-tab2struct = collectData(tab2Data, '1DG', '');
 
 histFields = fieldnames(tab1struct);
 
 fig1 = figure();
-fig2 = figure();
 ax = {};
 for f = 1:length(histFields)
     ax{f} = subplot(6,6,f);
@@ -49,10 +44,7 @@ for f = 1:length(histFields)
 %         wid = .2;
 %     end
     plotData(tab1struct.(histFields{f}), ax{f});
-    plotData(tab2struct.(histFields{f}), ax{f});
-    if f == length(histFields)
-        leg = legend(tab1DataType, tab2DataType);
-    end
+
     xlabel('log intensity (au)')
     ylabel('probability')
     title('distribution of trace intensities')

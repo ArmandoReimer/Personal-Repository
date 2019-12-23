@@ -8,6 +8,7 @@ scale = 1;
 color = {'red'}; %just using red as the default
 optionalResults = '';
 ax = [];
+nuclearMaskFlag = false;
 
 %area for improvement: segment the nuclei and only include dog values from
 %within nuclei 
@@ -18,6 +19,8 @@ for i = 1:length(varargin)
         scale = varargin{i+1};
     elseif strcmpi(varargin{i}, 'ax')
         ax = varargin{i+1};
+    elseif strcmpi(varargin{i}, 'nuclearMask')
+        nuclearMaskFlag = true;
     end
 end
 
@@ -28,9 +31,18 @@ end
 
 [~,ProcPath,DropboxFolder] = readMovieDatabase(Prefix, optionalResults);
 
+if nuclearMaskFlag
+    load([DropboxFolder, filesep, Prefix, filesep, 'Ellipses.mat'], 'Ellipses');
+end
+
+load([DropboxFolder, filesep, Prefix, filesep, 'FrameInfo.mat']);
+
+
+nFrames = length(FrameInfo);
+nSlices = FrameInfo(1).NumberSlices;
 
 dogDirPath = [ProcPath,filesep,Prefix,'_\dogs'];
-dogDir = dir([dogDirPath, filesep,'DOG*.mat']);
+dogDir = dir([dogDirPath, filesep,'DOG*']);
 dogDir= {dogDir.name};
 numIm = length(dogDir);
 
@@ -42,17 +54,30 @@ end
 
 vals = [];
 
-try
-    parpool(20);
-end
+% try
+%     parpool(20);
+% end
 
-parfor i = 1:numIm
+for i = 1:numIm
+    
+    current_frame = floor(i/nSlices)+1;
     
     if strcmpi(saveType, 'tif')
         dog = imread([dogDirPath, filesep, dogDir{i}]);
     elseif strcmpi(saveType, 'mat')
         dog = load([dogDirPath, filesep, dogDir{i}]);
         dog = dog.plane;
+    end
+    
+    
+    if nuclearMaskFlag
+         nuclearMask = ones(size(dog, 1), size(dog, 2));
+        if current_frame <= nFrames
+            ellipsesFrame = Ellipses{current_frame};
+            nuclearMask = makeNuclearMask(ellipsesFrame, [size(dog,1), size(dog,2)], 'radScale', 1);
+        end
+    
+        dog = dog.*nuclearMask;
     end
     
     vals(i) = log10(max(dog(:))+1);
