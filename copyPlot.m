@@ -1,13 +1,26 @@
-function copyPlot(ax1, ax2)
+function copyPlot(ax1, ax2, varargin)
 
-    plot1 = ax1.Children;
-    y1 = plot1.YData;
-    x1 = plot1.XData;
-    e1 = plot1.UData;
+    closeFig = false;
+    clrmpFlag = false;
+    for i = 1:length(varargin)
+        if strcmpi(varargin{i}, 'close')
+            closeFig = true;
+        elseif strcmpi(varargin{i}, 'colorMap')
+            clrmpFlag = true;
+            clr = varargin{i+1};
+        end
+    end
+    
+    if clrmpFlag 
+        set(ax1.Children, 'Color', clr, 'MarkerFaceColor', clr);
+    end
+    for i = 1:length(ax1.Children)
+        copyobj(ax1.Children(i), ax2)
+    end
 
-    hold(ax2, 'on')
-    errorbar(ax2, x1, y1, e1,  '-o');
-%     plot(ax2, x1, y1, '-o')
-    standardizeFigure(ax2, [])
-
+    figure(ax2.Parent);
+    if closeFig
+        close(ax1.Parent);
+    end
+    
 end
