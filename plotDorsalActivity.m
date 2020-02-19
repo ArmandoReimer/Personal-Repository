@@ -17,7 +17,7 @@ function [fit, model] = plotDorsalActivity(x, y,activity, nc, DataType, ymean, s
     clr = 'r';
     plot(xxx, model(fit,xxx), '-', 'DisplayName',['fit: ',num2str(round(fit))], 'LineWidth', .5, 'Color', clr);
     hold on
-    errorbar(xx(idx), ymean(idx), se(idx), 'o', 'DisplayName', DataType, 'MarkerSize', 1, 'MarkerFaceColor', clr, 'CapSize', 0);
+    errorbar(xx(idx), ymean(idx), se(idx), 'o', 'DisplayName', DataType, 'MarkerSize', 3, 'MarkerFaceColor', clr, 'CapSize', 0);
 %     set(gca, 'Units', 'points', 'Position', [0, 0, 100, 100]);
     xlabel('dorsal concentration (au)');
     ylabel(activity);
