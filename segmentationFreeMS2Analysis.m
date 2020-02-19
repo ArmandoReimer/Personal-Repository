@@ -87,12 +87,12 @@ for i = 1:numIm
 end
 
 vals(vals==0) = NaN;
-h = histogram(ax, vals,nBins,'Normalization','pdf', 'facealpha', .6, 'DisplayStyle', 'stairs');
+h = histogram(ax, vals,nBins,'Normalization','pdf', 'facealpha', .6);
 set(ax,'YScale','log');
 xlabel(ax, 'log(max DoG intensity + 1) (au)');
 ylabel(ax, 'frequency');
 title(Prefix, 'Interpreter', 'none');
-% standardizeFigure(ax, [], color{1}, 'fontSize', 14);
+standardizeFigure(ax, [], color{1}, 'fontSize', 14);
 hold on
 
 

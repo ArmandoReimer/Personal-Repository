@@ -84,7 +84,6 @@ for e = 1:length(Prefixes)
         for p = 1:length(CompiledParticles{ch})
             schnitzInd = CompiledParticles{ch}(p).schnitz;
             CompiledParticles{ch}(p).dorsalFluoBin = single(schnitzcells(schnitzInd).dorsalFluoBin);
-            CompiledParticles{ch}(p).dvbin =  CompiledParticles{ch}(p).dorsalFluoBin;
         end
 
         save([resultsFolder,filesep,Prefixes{e},filesep,'CompiledParticles.mat'], 'CompiledParticles', '-append');
