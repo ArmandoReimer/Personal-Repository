@@ -1,11 +1,7 @@
 function [fit, model] = fitDorsalActivity(dlfluobins, activity, DataType, varargin)
 
 fractionFlag = false;
-for i = 1:length(varargin)
-    if strcmpi(varargin{i},'fraction')
-        fractionFlag = true;
-    end
-end
+fixKD = false; fixN = false; fixRate = false; fixOff = false;
 
 y = activity(:);
 x = dlfluobins(:);
@@ -17,25 +13,55 @@ xScale =10^-(round(log10(max(x(:)))));
 x = x.*xScale;
 yScale = 10^-(round(log10(max(y(:)))));
 y = y.*yScale;
-%p(1)=rate coefficient, p(2)=kd, p(3)=hill coefficient
-if ~fractionFlag
-    model = @(p, x) p(1).*(... 
-        ...
-        ( (x)./p(2)).^p(3) ./... %numerator
-        ...
-         ( 1 + ((x)./p(2)).^p(3) ) ) + p(4); %partition function
-else
-    model = @(p, x) (... 
-        ...
-        ( (x)./p(1)).^p(2) ./... %numerator
-        ...
-         ( 1 + ((x)./p(1)).^p(2) ) ) + p(3); %partition function
+%p(1)=rate coefficient, p(2)=kd, p(3)=hill coefficient p(4) y offset
+if fractionFlag
+    fixRate = true;
+    r = 1;
 end
+
 %rate, kd, hill, y offset 
 p0 = [max(y),max(x)/2, 1, 0];
 lb = [0, 1500.*xScale, 2, 0];
 ub = [max(y)*2, Inf, 6, 0];
 
+for i = 1:length(varargin)
+    if strcmpi(varargin{i},'fraction')
+        fractionFlag = true;
+    elseif strcmpi(varargin{i}, 'fixKD')
+        fixKD = true;
+        kd = varargin{i+1};
+        p0(2) = kd; lb(2) = kd; ub(2) = kd;
+     elseif strcmpi(varargin{i}, 'fixRate')
+        fixRate = true;
+        r = varargin{i+1};
+        p0(1) = r; lb(1) = r; ub(1) = r;
+     elseif strcmpi(varargin{i}, 'fixOff')
+        fixOff = true;
+        off = varargin{i+1};
+        p0(4) = off; lb(4) = off; ub(4) = off;
+    elseif strcmpi(varargin{i}, 'fixN')
+        fixN = true;
+        n = varargin{i+1};
+        p0(3) = n; lb(3) = n; ub(3) = n;
+    end
+end
+
+modelStr = '@(p, x) p(1).*(( (x)./p(2)).^p(3) ./( 1 + ((x)./p(2)).^p(3) ) ) + p(4)';
+% 
+% if fixRate
+%     modelStr = strrep(modelStr, 'p(1)', 'r');
+% end
+% if fixKD
+%     modelStr = strrep(modelStr, 'p(2)', 'kd');
+% end
+% if fixN
+%     modelStr = strrep(modelStr, 'p(3)', 'n');
+% end
+% if fixOff
+%     modelStr = strrep(modelStr, 'p(4)', 'off');
+% end
+
+model = str2func(modelStr);
 %rate, kd, hill, y offset 
 if contains(DataType, '1DgW', 'IgnoreCase', true)
     p0(3) = 3.5; lb(3) = 3.5; ub(3) = 3.5;

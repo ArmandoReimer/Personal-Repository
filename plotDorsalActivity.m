@@ -1,11 +1,16 @@
-function [fit, model] = plotDorsalActivity(x, y,activity, nc, DataType, ymean, se)
+function [fit, model] = plotDorsalActivity(x, y,activity, nc, DataType, ymean, se, varargin)
 
     xx = repmat(x, size(y,2), 1)';
 
     opts = {};
-    if strcmpi(activity, 'fraction competent')
+    if strcmpi(activity, 'fraction active')
         opts = [opts, 'fraction'];
     end
+    if ~isempty(varargin)
+        opts = [opts, varargin{1}, varargin{2}];
+    end
+    
+    %p(1)=rate coefficient, p(2)=kd, p(3)=hill coefficient p(4) y offset
     [fit, model] = fitDorsalActivity(xx, y, DataType, opts{:});
     idx = ~any(isnan(ymean),2);
     x4 = xx(idx);
@@ -21,7 +26,8 @@ function [fit, model] = plotDorsalActivity(x, y,activity, nc, DataType, ymean, s
     xlabel('dorsal concentration (au)');
     ylabel(activity);
     title([DataType, ' nc',num2str(nc+11)]);
-    legend(DataType, ['fit: ',num2str(round(fit))], 'Interpreter', 'none')
-    leg = get(gca, 'Legend'); w=.02;h=.01;set(leg, 'Units', 'normalized', 'Position', [1-w, 1-h,w, h], 'Box','off');
+    %p(1)=rate coefficient, p(2)=kd, p(3)=hill coefficient p(4) y offset
+    legend(DataType, {['fit: ',num2str(round(fit))], 'amplitude, KD(au), n, y offset'})
+    leg = get(gca, 'Legend'); w=.02;h=.01;set(leg, 'Units', 'normalized', 'Position', [0.5,0.8,w, h], 'Box','off');
 
 end

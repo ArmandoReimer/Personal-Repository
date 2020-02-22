@@ -1,11 +1,4 @@
-function plotFracByDlFluo2(DataType, varargin)
-
-fractionFlag = false;
-mrnaFlag = false;
-durationFlag =false;
-maxFlag =false;
-turnOnFlag = false;
-
+function dorsalResults = plotFracByDlFluo2(DataType, varargin)
 
 displayTiles = false;
 
@@ -13,17 +6,7 @@ minNuclei =1; %minimum total nuclei for a bin to be plottable
 minEmbryos = 1; %minimum number of nuclei per bin
 
 for i = 1:length(varargin)
-    if strcmpi(varargin{i}, 'fraction')
-        fractionFlag = true;
-    elseif strcmpi(varargin{i}, 'mrna')
-        mrnaFlag = true;
-    elseif strcmpi(varargin{i}, 'duration')
-        durationFlag = true;
-    elseif strcmpi(varargin{i}, 'maxfluo') || strcmpi(varargin{i}, 'max')
-        maxFlag = true;
-    elseif strcmpi(varargin{i}, 'turnOn') || strcmpi(varargin{i}, 'timeOn')
-        turnOnFlag = true;
-    elseif strcmpi(varargin{i}, 'displayTiles')
+    if strcmpi(varargin{i}, 'displayTiles')
         displayTiles = true;
         tileFig = figure();
         holdFig = figure();
@@ -45,6 +28,7 @@ allmrnasnomean = cell(3, nBins);
 npartFluoEmbryo = {};
 nschnitzFluoEmbryo = {};
 fracFluoEmbryo = {};
+dorsalResults = {};
 
 compiledProjects = {};
 for e = 1:nEmbryos
@@ -55,6 +39,8 @@ for e = 1:nEmbryos
     
     for nc = 12:14
         for bin = 1:nBins
+            
+            dorsalResults{nc-11}.allmrnasnomean{bin} = {};
             
             tempNucleiOfInterest = [];
             spotAccumulatedFluo = [];
@@ -96,16 +82,16 @@ for e = 1:nEmbryos
             
             nucleiOfInterest = tempNucleiOfInterest;
             
-            allmrnasnomean{nc-11,bin} = [allmrnasnomean{nc-11,bin}, spotAccumulatedFluo];
+            dorsalResults{nc-11}.allmrnasnomean{bin} = [dorsalResults{nc-11}.allmrnasnomean{bin}, spotAccumulatedFluo];
             
             %             npartFluoEmbryo{nc-11}(bin, e) = particlesOfInterest;
             %             nschnitzFluoEmbryo{nc-11}(bin, e) = length(nucleiOfInterest);
             nschnitzFluoEmbryo{nc-11}(bin, e) = length(find( [compiledProject.cycle] == nc & [compiledProject.dorsalFluoBin] == bin ));
             npartFluoEmbryo{nc-11}(bin, e) = length(find([compiledProject.cycle] == nc & [compiledProject.dorsalFluoBin] == bin  & ~cellfun(@isempty, {compiledProject.particleFrames})));
-            allmrnasEmbryo{nc-11}(bin, e) = nanmean(spotAccumulatedFluo);
-            alldurationsEmbryo{nc-11}(bin, e) = nanmean(spotDurations);
-            allTurnOnsEmbryo{nc-11}(bin, e) = nanmean(spotTurnOnTimes);
-            allMaxFluoEmbryo{nc-11}(bin, e) = nanmean(spotMaxFluos);
+            dorsalResults{nc-11}.allmrnasEmbryo(bin, e) = nanmean(spotAccumulatedFluo);
+            dorsalResults{nc-11}.alldurationsEmbryo(bin, e) = nanmean(spotDurations);
+           dorsalResults{nc-11}. allTurnOnsEmbryo(bin, e) = nanmean(spotTurnOnTimes);
+            dorsalResults{nc-11}.allMaxFluoEmbryo(bin, e) = nanmean(spotMaxFluos);
             
             %             if nschnitzFluoEmbryo{nc-11}(bin, e) >= 1
             %                 embryosPerBin{nc-11}(bin) = embryosPerBin{nc-11}(bin) + 1;
@@ -118,7 +104,7 @@ for e = 1:nEmbryos
         end
         
         
-        fracFluoEmbryo{nc-11}(:, e) = npartFluoEmbryo{nc-11}(:,e)./nschnitzFluoEmbryo{nc-11}(:,e);
+        dorsalResults{nc-11}.fracFluoEmbryo(:, e) = npartFluoEmbryo{nc-11}(:,e)./nschnitzFluoEmbryo{nc-11}(:,e);
         
     end
     
@@ -157,52 +143,38 @@ for nc = 1:2
     %      filteredWeightedSE = @(y) nanstd(bootstrp(nSamples, @(x) filteredWeightedMean(x), y), 0, 1);
     %         filteredWeightedSE = @(x) (nanstd(x,0, 2)./sqrt(embryosPerBin{nc}'))  .* binFilter{nc}';
     
-    meanFracFluoEmbryo{nc} = filteredWeightedMean(fracFluoEmbryo{nc});
-    seFracFluoEmbryo{nc} = filteredWeightedSE(fracFluoEmbryo{nc});
+    dorsalResults{nc}.meanFracFluoEmbryo = filteredWeightedMean(dorsalResults{nc}.fracFluoEmbryo);
+    dorsalResults{nc}.seFracFluoEmbryo = filteredWeightedSE(dorsalResults{nc}.fracFluoEmbryo);
     
-    meanallmrnasEmbryo{nc} = filteredWeightedMean(allmrnasEmbryo{nc});
-    seallmrnasEmbryo{nc} = filteredWeightedSE(allmrnasEmbryo{nc});
+    dorsalResults{nc}.meanallmrnasEmbryo = filteredWeightedMean(dorsalResults{nc}.allmrnasEmbryo);
+    dorsalResults{nc}.seallmrnasEmbryo = filteredWeightedSE(dorsalResults{nc}.allmrnasEmbryo);
     
-    meanalldurationsEmbryo{nc} = filteredWeightedMean(alldurationsEmbryo{nc});
-    sealldurationsEmbryo{nc} = filteredWeightedSE(alldurationsEmbryo{nc});
+    dorsalResults{nc}.meanalldurationsEmbryo = filteredWeightedMean(dorsalResults{nc}.alldurationsEmbryo);
+    dorsalResults{nc}.sealldurationsEmbryo = filteredWeightedSE(dorsalResults{nc}.alldurationsEmbryo);
     
-    meanTurnOnsEmbryo{nc} = filteredWeightedMean(allTurnOnsEmbryo{nc});
-    seTurnOnsEmbryo{nc} = filteredWeightedSE(allTurnOnsEmbryo{nc});
+    dorsalResults{nc}.meanTurnOnsEmbryo = filteredWeightedMean(dorsalResults{nc}.allTurnOnsEmbryo);
+    dorsalResults{nc}.seTurnOnsEmbryo = filteredWeightedSE(dorsalResults{nc}.allTurnOnsEmbryo);
     
-    meanAllMaxFluoEmbryo{nc} = filteredWeightedMean(allMaxFluoEmbryo{nc});
-    seAllMaxFluoEmbryo{nc} = filteredWeightedSE(allMaxFluoEmbryo{nc});
+    dorsalResults{nc}.meanAllMaxFluoEmbryo = filteredWeightedMean(dorsalResults{nc}.allMaxFluoEmbryo);
+   dorsalResults{nc}. seAllMaxFluoEmbryo = filteredWeightedSE(dorsalResults{nc}.allMaxFluoEmbryo);
+   
+    dorsalResults{nc}.dorsalFluoBins  = dlfluobins;
+    dorsalResults{nc}.DataType = DataType;
     
 end
+% 
+% allmrnasnc12 = dorsalResults{nc}.allmrnasnomean{:};
+% lens = [];
+% for b = 1:nBins
+%     lens(b) = length(allmrnasnc12{b});
+% end
+% allmrnasnc12mat = zeros(nBins, max(lens));
+% for bin = 1:nBins
+%     if ~isempty(allmrnasnc12{bin})
+%         allmrnasnc12mat(bin, :) = padarray(allmrnasnc12{bin}',max(lens)-length(allmrnasnc12{bin}),NaN, 'post');
+%     end
+% end
 
-allmrnasnc12 = allmrnasnomean(1, :);
-lens = [];
-for b = 1:nBins
-    lens(b) = length(allmrnasnc12{b});
-end
-allmrnasnc12mat = zeros(nBins, max(lens));
-for bin = 1:nBins
-    if ~isempty(allmrnasnc12{bin})
-        allmrnasnc12mat(bin, :) = padarray(allmrnasnc12{bin}',max(lens)-length(allmrnasnc12{bin}),NaN, 'post');
-    end
-end
-
-%%
-%plotting
-for nc = 1:1
-    
-    if fractionFlag
-        [fractionFit, fractionModel] = plotDorsalActivity(dlfluobins, fracFluoEmbryo{nc}, 'fraction competent', nc, DataType, meanFracFluoEmbryo{nc}, seFracFluoEmbryo{nc});       
-    end
-    if durationFlag
-        [durationFit, durationModel] = plotDorsalActivity(dlfluobins,alldurationsEmbryo{nc}, 'duration active nuclei (frames)', nc, DataType, meanalldurationsEmbryo{nc}, sealldurationsEmbryo{nc});
-    end
-    if turnOnFlag
-        [turnOnFit, turnOnModel] = plotDorsalActivity(dlfluobins, allTurnOnsEmbryo{nc}, 'turn on time (min)', nc, DataType, meanTurnOnsEmbryo{nc}, seTurnOnsEmbryo{nc});
-    end
-    if maxFlag
-        [maxFit, maxModel] = plotDorsalActivity(dlfluobins, allMaxFluoEmbryo{nc}, '95% of brightest spots (au)', nc, DataType, meanAllMaxFluoEmbryo{nc}, seAllMaxFluoEmbryo{nc}); 
-    end
-    
-end
+save([resultsFolder,filesep,DataType,filesep,'dorsalResults.mat'], 'dorsalResults', '-v7.3')
 
 end
