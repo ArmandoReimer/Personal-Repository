@@ -27,14 +27,14 @@ end
 a = im2;
 se = strel('disk', 2);
 nCircles = [];
-nCircles = [nCircles, length(regionprops(a))];
+nCircles = [nCircles, length(regionprops(logical(a)))];
 chg = 0;
 tol = 2; %process stays constant for 5 steps
 while chg < tol
     a = imdilate(a, se);
     a = bwmorph(a, 'fill');
     a = bwpropfilt(a,'EulerNumber',[0, 0]);
-    nCircles = [nCircles, length(regionprops(a))];
+    nCircles = [nCircles, length(regionprops(logical(a)))];
     
     if nCircles(end) == nCircles(end-1)
         chg = chg + 1;
@@ -62,8 +62,8 @@ end
 
 %     a = imfill(im2, 'holes');
 %     figure(4); imshow(a, [])
-cs= regionprops(a, 'Centroid');
-radii = regionprops(a, 'EquivDiameter');
+cs= regionprops(logical(a), 'Centroid');
+radii = regionprops(logical(a), 'EquivDiameter');
 radii = [radii.EquivDiameter]/2;
 centers=[];
 for k = 1:length(cs)

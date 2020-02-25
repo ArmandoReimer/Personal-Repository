@@ -3,19 +3,22 @@
 % prefixes = {'2019-10-22-1Dg11_EfEf3_1','2019-10-23-1Dg11_EfEf3_2','2019-10-23-1Dg11_EfEf3_3'};
 
 %%%%%
-dataType = '1Dg11_FFF';
+dataType = '1Dg-8D_FFF';
 [~, prefixes, ~] = LoadMS2Sets(dataType, 'justPrefixes', 'noCompiledNuclei');
-parpool(18)
+% parpool(18)
 for i = 1:length(prefixes)
+    if i ~=1
 %            ExportDataForLivemRNA(prefixes{i},  'lowbit', 'keepTifs')
-%             filterMovie(prefixes{i},'highPrecision','customFilter','Difference_of_Gaussian_3D', {2,4}, 'saveAsMat', 'nogpu', 'keepPool', 'nWorkers', 1)
-%         TrackNuclei(prefixes{i}, 'nWorkers', 1)
-%     segmentSpots(prefixes{i},10025, 'Shadows', 1,'track', 'keepPool', 'keepProcessedData', 'nuclearMask', 'saveAsMat');
-            TrackmRNADynamics(prefixes{i}, 'noRetracking');
+            filterMovie(prefixes{i},'highPrecision','customFilter','Difference_of_Gaussian_3D', {2,4}, 'saveAsMat', 'nogpu', 'keepPool', 'nWorkers', 1)
+        TrackNuclei(prefixes{i}, 'nWorkers', 1)
+    
+    segmentSpots(prefixes{i},10025, 'Shadows', 1,'track', 'keepPool', 'keepProcessedData', 'nuclearMask', 'saveAsMat', 'nWorkers', 1);
+%             TrackmRNADynamics(prefixes{i}, 'noRetracking');
     %         FindAPAxisFullEmbryo(prefixes{i}, 'CorrectAxis')
     %     AddParticlePosition(prefixes{i},  'yToManualAlignmentPrompt');
     %     CheckDivisionTimes(prefixes{i}, 'lazy')
-          nSpots = 1; fit3DGaussiansToAllSpots(prefixes{i}, nSpots)
+    end
+          nSpots = 1; fit3DGaussiansToAllSpots(prefixes{i}, nSpots, 'nWorkers', 1)
         CompileParticles(prefixes{i}, 'SkipAll', 'ApproveAll', 'minBinSize', .3, 'MinParticles', 0, 'yToManualAlignmentPrompt');
 end
 %
