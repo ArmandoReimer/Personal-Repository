@@ -1,8 +1,11 @@
 % Function to apply selected filters to specified frame of a time series
 function featureTable = filterImageFrames(Prefix,sigmaVec,featureCell,varargin)
+
 featureTable = [];
+
 for i = 1:numel(varargin)
 end
+
 [SourcePath,ProcPath,DropboxFolder,MS2CodePath, PreProcPath,...
     Folder, Prefix, ExperimentType,Channel1,Channel2,OutputFolder,...
     Channel3] = readMovieDatabase(Prefix);
