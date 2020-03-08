@@ -1,0 +1,300 @@
+<html>
+
+<head>
+<title>Popup pseudo object</title>
+<style>
+<!--
+span.mcode
+{ color: #ff0000;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+span.mcode2
+{ color: #4040ff;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+span.mcode3
+{ color: #4040ff;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+  font-size: 80%;
+}
+h3 { color: #009988; margin-bottom: 0 }
+span.fx
+{ color: #4040ff;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+span.fx2
+{ color: #4040ff; font-size: 80%;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+-->
+</style>
+
+</head>
+<body>
+
+<img src="../images/plt.png" width="300" height="160" align="right"></td>
+<br><h1>The popup pseudo object</h1> <br clear="left"><br><br>
+      Just as the edit pseudo object described above may replace an edit uicontrol, the popup pseudo
+      object described here may be used to replace a popup uicontrol
+      (<span class="mcode">uicontrol('Style','Popup')</span>).
+      The <span class="mcode">pop</span> pseudo object has the same advantages as those listed above
+      for the edit pseudo object.<br>
+      <img src="../images/PopupClosed.png" hspace=10 vspace=10 align="left">
+      <img src="../images/PopupOpened.png" hspace=10 vspace=10 align="left">
+      <br>The popup pseudo object is highly customizable, but here is a typical example. On the left is the popup in its
+      closed state. Click on the current selection ("normal" in this example) and the popup will open as shown to the right.
+      Note that in its opened state the currently selected item is shown in bold. As you would expect, simply clicking on
+      the new selection you want, closes the popup with the new selection.
+      <br clear="left"> <br>
+      The following table describes the popup pseudo object properties that you may set and query, although
+      how to use these properties may not become clear until later when the commands are discussed:<br><br>
+    
+        <table border="3" cellpadding="4" cellspacing="0" vspace="8" hspace="20" bordercolor="#9999ff">
+        <tr>
+          <td align="center"><b><font color="#4040ff">Property<br>Name</font></b></td>
+          <td><b><font color="#4040ff">Property<br>Value</font></b></td>
+        </tr> <tr>
+          <td align="center" valign="top"> <span class="mcode">choices</span></td>
+          <td>A cell array of strings specifying the choices given when the popup is selected.
+              If all the choices are numeric you can use a numeric array instead of the cell array.
+              For example <span class="mcode">[3 5 7.5]</span> is equivalent to <span class="mcode">{'3' '5' '7.5'}</span>.
+           </td>
+        </tr> <tr>
+          <td align="center" valign="top"> <span class="mcode">index</span></td>
+          <td>An integer specifying the current choice (default = 1, i.e. the 1st element of the choices cell array).
+              After the popup is set to the specified index, the popup is closed if it had been open.
+              The callback is not normally called when the popup choice is set using the index parameter, however if you
+              specify the negative of the index desired, then the callback will be called after the index is set.
+          </td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">callbk</span></td>
+          <td>A callback to be executed when the popup value is changed.<br>
+              If the callback is defined with a string, then:<br>
+              Occurrences of <span class="mcode">'@IDX'</span> will be replaced with the popup index.<br>
+              Occurrences of <span class="mcode">'@STR'</span> will be replaced with the popup string.</td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">position</span><br>or<br><span class="mcode">pos</span></td>
+          <td><span class="fx">[x y width height] </span>for the opened popup in pixels or normalized units.
+          <br><br>
+          Two other options may be enabled by making the x or y value negative. Therefore these two lines are equivalent:
+          <br><br>
+          <span class="fx">plt('pop','pos',[-.3 .5 .1 .2],...) <br>
+                           plt('pop','pos',[ .3 .5 .1 .2],'offset',0,...) </span>
+          <br><br>
+          Likewise the following two lines are also equivalent:
+          <br><br>
+          <span class="fx">plt('pop','pos',[.3 -.5 .1 .2],...) <br>
+                           plt('pop','pos',[.3&nbsp;  .5 .1 .2],'swap',0,...) </span>
+          <br><br>
+          In both these examples the second line is preferred for its clarity. Refer to the descriptions
+          of the offset and swap parameters below. Note that you also can make both x and y negative
+          to enable both the offset and swap options.
+          <br><br>
+          If the position was specified previously you can use a scalar argument to modify just the height component
+          or a two element vector to modify just the width and height components.</td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">offset</span></td>
+          <td>y or [x y] which specifies the location of the closed popup relative to the opened popup.<br>
+          x is set to 0.08 if it is not specified (where 0/1 represent horizontal position of the
+          left/right edges of the opened popup). The meaning of the y variable becomes clear by considering
+          the example where the choices cell array contained 4 elements. Then:
+          <ul>
+        <li><span class="fx">y = 0: &nbsp; </span> represents the vertical position of the bottom of the opened popup
+        <li><span class="fx">y = 0.5: </span> represents the vertical position of choice{1} of the opened popup
+        <li><span class="fx">y = 1.5: </span> represents the vertical position of choice{2} of the opened popup
+        <li><span class="fx">y = 2.5: </span> represents the vertical position of choice{3} of the opened popup
+        <li><span class="fx">y = 3.5: </span> represents the vertical position of choice{4} of the opened popup
+        <li><span class="fx">y = 4.0: </span> represents the vertical position of the top of the opened popup
+          </ul>
+          Note that negative values for x or y may be used to indicate that the closed popup position should be
+          to the left of or above the position of the opened popup.
+          <br><br>
+          If the offset parameter is not included, then the closed popup will be at the top of the opened popup,
+          i.e. at position <nobr><span class="fx">[0.08 n]</span></nobr> (where n is the number of popup choices).
+          To put the closed popup at the bottom of the opened popup simply include
+          <span class="mcode">'offset',0 </span>in the parameter list.
+      </td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">colorbk</span></td>
+          <td>The background color used when the popup is open. (default&nbsp;=&nbsp;[0&nbsp;.3&nbsp;.4]);</td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">colorfr</span></td>
+          <td>The foreground color used when the popup is open. (default&nbsp;=&nbsp;[.1&nbsp;1&nbsp;.9])</td>
+        </tr> <tr>    
+          <td align="center" valign="top"><span class="mcode">enable</span></td>
+          <td>-1=invisible, 0=disabled, 1=enabled (default=1)</td>
+        </tr> <tr>    
+          <td align="center" valign="top"><span class="mcode">swap</span></td>
+          <td>Normally a left-click on the pseudo popup control opens the popup to reveal the list of choices
+          while a right click merely advances to the next choice without opening the popup. Sometimes it is
+          useful to reverse the roles of the left and right-click - a mode I refer to as the "super-button"
+          mode. In fact if there is only a single choice, it behaves exactly like a uicontrol button in that
+          the only effect from clicking on it is that its callback is called. If there are two choices in
+          the choices cell array, it behaves similarly except that the button text toggles between the two
+          choices with every click. Usually if there are fewer than four choices, the super-button mode is
+          more convenient than the regular mode. The super-button mode is selected by including the swap
+          parameter in the argument list. Often you will want to make the super-button look at least somewhat
+          like a button by including a box around the super-button text. The color of this box is specified
+          by the swap parameter. For example <span class="mcode">swap,'blue'</span> will draw a blue box around
+          the button text. Or instead of a Matlab color string, you can use an [r g b] color triple. Set the
+          parameter to zero to use the current foreground color (which defaults to [.1 1 .9]). If the parameter
+          is missing (which is only possible if the 'swap' argument is at the end) or if the parameter is
+          set to <span class="mcode">''</span> or <span class="mcode">[]</span> or <span class="mcode">'none'</span>
+          then no box is drawn around the button text.
+          Sometimes it is useful to be able to toggle the super-button mode on or off interactively. This is
+          possible with the following quick procedure:
+          <ol><li>First open the popup. (A left or a right click will do this, depending on which mode you are in.)
+              <li>Then use the mouse to move the figure window a very small amount (less than 15 pixels
+                  in any direction).
+              <li>And finally close the popup by clicking on any of the choices in the drop down list.
+          </ol>
+          The 15 pixel requirement makes it quite unlikely that this action is performed unintentionally,
+          especially since one rarely thinks of moving the figure while adjusting a control. The
+          text<span class="mcode"> swap toggled </span>will appear in the Matlab command window to assure
+          you that the operation worked as intended.</td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">hide</span></td>
+          <td>A list of objects to hide before opening the popup. When the popup is later closed, these
+          objects are shown again (unless they were hidden before the popup opened). The hide parameter is
+          used to remove the distraction of objects that overlap or are too close to the popup list.
+          If there is a zero in the list, before the list is used the zero will be replaced with the
+          handle (or handles) of the plot grid lines. (This is convenient because grid lines are the
+          most common object to overlap with opened popups.) Also setting the hide parameter to
+          <span class="mcode">''</span> or <span class="mcode">[]</span> or not supplying a parameter
+          at all (only possible if the 'hide' argument is the last one) is equivalent to setting
+          the parameter to zero.</td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">interp</span></td>
+          <td><span class="mcode">'none'</span> or <span class="mcode">'tex'</span> (default='none')</td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">label</span></td>
+          <td> <span class="mcode">{'LabelString', offset, 'Property1',Value1,'Property2',Value2, ...}</span>
+          <br><br>
+          A label for the popup will be created as a text object in the same axis that is used to display
+          the popup choices and will contain the string 'LabelString' (the first element of the cell array argument).
+          The 2nd element of the cell array is a complex number containing the offset for the label position in pixels
+          from the closed popup. (The real part is the x offset and the imaginary part is the y offset). For example
+          if the 2nd element of the cell array is -10+20i, then the label will be positioned 10 pixels to the left
+          and 20 pixels above the closed popup.
+          <br><br>
+          The remaining cell array elements (if any) must contain property/value pairs, and the properties must be valid
+          text object property names. The specified properties will be applied to the closed popup text string.
+          <br><br>
+          Specifying an offset of <span class="mcode">''</span> or <span class="mcode">[]</span> is equivalent to
+          specifying the number 5 for this cell array element. (i.e. the default offset is 5 pixels to the left.)
+          <br><br>
+          Instead of specifying a cell array for the label argument, you may also specify a string. For example,
+          the argument <span class="mcode">'LabelString'</span> is equivalent to
+          </nobr><span class="mcode">{'LabelString',''}</span></nobr>. Since the default offset is usually sufficient,
+          it turns out that this shorter form is used far more often than the cell array parameter.</td>
+        </tr>  <tr>
+          <td align="center" valign="top"><span class="mcode">labely</span></td>
+          <td>This behaves just like the <span class="mcode">label</span> parameter above except for the fact that the
+          default offset when it isn't specified is 16i (instead of 5 as is used by the
+          <span class="mcode">label</span> parameter). This is the usual offset needed for placing the popup label
+          directly above the closed popup text.</td>
+        </tr> <tr>
+          <td align="center" valign="top"><span class="mcode">*****</span></td>
+          <td>If a property name is given which isn't in the list above then the property is applied to
+          the popup text object itself. (It must be a valid text property.)&nbsp; The text color
+          (<span class="mcode">'color'</span>) is usually set this way, however if that property is
+          not specified, the default color is [1&nbsp;1&nbsp;.4].</td>
+        </tr>
+        </table>
+        <br>
+        The following commands are used to create a popup pseudo object:
+        <br><br>
+        <table border="3" cellpadding="4" cellspacing="0" vspace="8" hspace="20" bordercolor="#9999ff">
+    <tr>
+        <td><span class="mcode">H = plt('pop',<br> &nbsp;  &nbsp; 'Poperty1',Value1,
+                                          <br> &nbsp;  &nbsp; 'Poperty2',Value2,...)</span>
+    </td><td>The property names allowed and the interpretation of the property values are shown in the table above.
+             You many use as many or as few properties as you need in whatever order you choose.
+        </td></tr> <tr>
+    <td><span class="mcode">H = plt('pop',<br> &nbsp;  &nbsp; [x y width height],
+                                      <br> &nbsp;  &nbsp; {'choice1', ... 'choiceN'},
+                                          <br> &nbsp;  &nbsp; 'Poperty3',Value3,...)</span>
+    </td><td>Both the 'position' and the 'choices' properties are required, so for conciseness you may omit those
+             property names if the property values appear first and in this order.
+             Property names other than these two may not be omitted.
+        </td></tr> <tr>
+    <td><span class="mcode">H = plt('pop',<br> &nbsp;  &nbsp; 'pos',[x y width height],
+                                          <br><nobr> &nbsp; &nbsp; 'choices',{'choice1', ...},</nobr>
+                                          <br> &nbsp;  &nbsp; 'Poperty3',Value3,...)</span>
+    </td><td>The above command is translated into this line before execution. Note that in any of these commands
+    you may use either pixel or normalized units. (You aren't required to included the 'units' property
+    since plt can figure out this property from the size of the numbers in the position vector.)<br>
+        </td></tr></table>    
+
+        <br>The above calls create a popup pseudo object and returns the handle of the text object that is
+    visible when the popup is closed. This handle (H) may be used to modify or query the popup pseudo
+    object parameters using the forms below:<br><br>
+    <table border="3" cellpadding="4" cellspacing="0" vspace="8" hspace="20" bordercolor="#9999ff">
+        <tr>
+        <td><span class="mcode">plt('pop',H,<br> &nbsp;  &nbsp; 'Poperty1',Value1,<br> &nbsp;  &nbsp; 'Poperty2',Value2,...)</span>
+    </td><td>If H is a scalar, the specified property values are applied to the popup pseudo object identified by handle H.
+             The property names are the same ones described in the table above.
+    <br><br>
+    If H is a vector then Property1 of H(k) is set to the kth row of Value1.
+    If Value1 doesn't have that many rows, the last row will be used. Only one
+        property is allowed for the case where H is a vector.
+        </td></tr> <tr>
+    <td><span class="mcode">plt('pop',H,'get','string')</span></td><td>returns the currently selected element of the choices cell array.<br>
+                                                       Equivalent to the shorter command:<span class="mcode"> get(H,'string')</span>
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','axis')</span></td><td>returns the handle of the axis used to display the opened popup.
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','choices')</span></td><td>returns the cell array of choices that was set via the 'choices' parameter
+        </td></tr> <tr>
+    <td><span class="mcode">plt('pop',H,'get','index')</span></td><td>returns the index number of the specified edit pseudo object (between 1 and the
+                                                                      length of the choices cell array).
+                                                                      For conciseness, this command may also be written without the last argument:
+                                      <nobr><span class="mcode">plt('pop',H,'get')</span></nobr> or even without the last two arguments:
+                                      <nobr><span class="mcode">plt('pop',H)</span></nobr>
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','callbk')</span></td><td>returns the function handle or string that was set via the 'callbk' parameter
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','offset')</span></td><td>returns the number or vector that was specified via the 'offset' parameter
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','colorfr')</span></td><td>returns the 3 element vector or color string that was specified via the 'colorfr' parameter
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','enable')</span></td><td>returns -1/0/1 if the pseudo object is hidden/disabled/enabled
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','hide')</span></td><td>returns the vector of handles that was set via the 'hide' parameter
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','interp')</span></td><td>returns the string that was set via the 'interp' parameter
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','label')</span></td><td>returns the label handle
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','swap')</span></td><td>returns true if the swap (super-button) mode is selected.
+        </td></tr> <tr>
+        <td><span class="mcode">plt('pop',H,'get','cell')</span></td><td>returns an 11 element cell array that is a concatenation of the
+        previous 11 get commands:<br>{axis choices index callbk offset colorfr enable hide interp label}. Note that this does not include
+        the first get command ('string') listed above. Also 'cell' in this call may be replaced by any string other than one
+        of the other 12 valid 'get' arguments.
+        </td></tr> <tr>
+        <td width="280"><span class="mcode">plt('pop',H,'open')</span></td><td>opens the popup revealing the popup choices.
+        </td></tr>
+    </table>    
+    <br><b><font size="4">Mouse behavior:</font></b><br>
+        Left-clicking on the popup text object &quot;opens&quot; the popup. What this means is 
+        that the popup string is replaced by a list of the popup choices (rendered using 
+        colorfr/colorbk). The user then clicks on the desired choice which then becomes 
+        the new text string. right-clicking on the popup text object changes the text 
+        string to the next available choice. If the last choice is already selected, 
+        then right-clicking will change the text string to the first available choice 
+        (in the &quot;choices&quot; array). If you hold down the right mouse button, the
+    selection will continuously advance cyclically. You can alter the rate at which
+    the cycling proceeds by setting the figure application data
+    <span class="mcode">repeat</span> property. The use of this property is more
+    completely explained above in the description of the edit pseudo object.
+    <br><br>
+    See both the <span class="mcode">afilt.m</span> and the <span class="mcode">curves.m</span>
+    <a href="Programming%20examples.htm">example programs</a> for ideas on how to use the
+    popup pseudo object as well as the edit pseudo object described in the previous section.
+    Also the <span class="mcode">pltsq.m</span> and the <span class="mcode">wfall.m</span>
+    examples show how to use the popup pseudo object to create a "super button"
+    used to start and stop a moving plot.
+</body>
+
+</html>

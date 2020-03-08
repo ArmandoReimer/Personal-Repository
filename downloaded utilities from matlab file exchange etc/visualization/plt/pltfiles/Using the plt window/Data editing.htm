@@ -1,0 +1,346 @@
+<html>
+<head>
+<title>Data editing</title>
+<style>
+<!--
+span.mcode
+{ color: #ff0000;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+span.mcode3
+{ color: #4040ff;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+  font-size: 80%;
+}
+-->
+</style>
+</head>
+<body>
+
+<img src="../images/plt.png" width="300" height="160" align="right"></td>
+<br><h1>Data editing</h1> <br clear="left"><br><br>
+
+plt has the capability to modify the plotted data, either one
+point at a time or over a specified range. Data entry is accomplished
+by entering the coordinates via the keyboard or by using the mouse
+when keyboard accuracy is not required. (An alternate method of data 
+editing appropriate for short data sequences is described in the
+<a href="Menu%20box.htm">Menu box </a>section.)
+<br><br>
+<img src="../images/DataEdit.png" align="left" hspace="10" vspace="10">
+<br>The first step is to click on the trace containing the data that you wish to edit. 
+The second step is to right-click on the Ycursor edit box. (This is 
+the edit box closest to the lower right corner of the figure.) When you do 
+that, a popup menu will appear with a list of the 10 choices shown here. The first three items in this menu,
+don't really have anything to do with data editing, but this was a convenient place to put them.
+When you select the first menu item (<span class="mcode">Properties</span>) one of three different
+property editing windows will appear depending on how it is selected. When you left-click on
+&quot;Properties&quot; a window appears which allows you to modify the color and other properties of the
+currently selected line and its cursor. If before clicking on &quot;Properties&quot; you enable delta
+cursor mode  (&Delta; button) then a property windows appears which allows you to edit all the lines at once.
+This is often appropriate for the color property, but it also may be useful for some of the other 
+trace properties, such as linewidth. And finally, if instead of left-clicking you
+right-click on &quot;Properties&quot; then a window appears that allows you to 
+edit the figure colors. This is the easiest method of accessing the three 
+property editing windows, although for historical reasons there are two additional ways of opening 
+these windows. One is via the &quot;Colors/Lines&quot; selection of the menu bar and the 
+other is via right-clicking the &quot;Mark&quot; tag in the menu box. Both of these 
+methods are mentioned in the <a href="Menu%20box.htm">Menu box </a> &nbsp;section 
+which also has a full description of the three different property editing windows 
+and how to use them.
+<br><br>
+The second menu choice (<span class="mcode">multiCursor</span>) toggles the multiCursor mode which
+is described here in the <a href="Cursoring.htm">Cursoring</a> section and third menu choice
+(<span class="mcode">xView slider</span>) toggles the xView slider which is 
+described here in the <a href="Zooming%20and%20panning.htm">Zooming and panning</a> section
+<br><br>
+The fourth menu choice (<span class="mcode">Cancel</span>) is useful if you opened this popup menu
+accidentally or when you want to abort an already initiated data editing operation. An additional feature
+of the Cancel selection, is that if you right click on it (instead of the usual left click) the the
+previous editing operation will be undone. This may involve reverting many data items to the original
+when you are using the Range editing described below. This is only a single level undo so you can't undo
+multiple edit operations.
+<br><br>
+The remaining six selections in this popup contain the actual data editing commands. 
+The descriptions below are written for completeness rather 
+than brevity so don't be scared off. The commands are intuitive, so you may be better off
+skipping the descriptions at first 
+in favor of experimentation. The six editing commands are divided into these two types:
+<br><br>
+
+<table border="1" cellpadding="8" cellspacing="0" bordercolor="#b0b0b0" width="100%">
+  	<tr>	<td><center><b>Modify</b></center></td>
+		<td>The modify commands change the x or y (or both) coordinates of a 
+		single data point by moving the edit cursor with the mouse. After a modify command, the
+        the lengths of the x and y vectors normally don't change ... however there are two exceptions
+        to this. The first is called the "delete mode" which is activated by dragging the edit cursor
+        to any point outside the axis boundary. The point dragged will be removed causing the lengths
+        of the x and y vectors to decrease by one. The 2nd exception is called the "insert mode".
+        The insert mode is activated by dragging the edit cursor
+        with the right mouse button instead of the usual left button. With the insert mode,
+        the lengths of the x and y vectors will both increase by one.</td>
+	</tr>
+	<tr>    <td><center><b>Range</b></center></td>
+		<td>With the range commands the length of the x and y vectors remain the same.
+        The range commands allow you to modify many consecutive data elements at once.
+        All the data points between the current cursor 
+		location and the location modified during the previous data editing 
+		command are modified so that all these points lie on a straight line 
+		connecting the two end locations. For this to work, the previously 
+		edited point and the current cursor location must both lie on the same 
+		line. If this is not true, then the Range commands 
+		behave just like the Modify commands described above. You can recognize whether
+        the range operation or the modify operation is in progress based on the shape
+        of the edit cursor (See cursor shapes table below).</td>
+	</tr>
+</table>
+<br>
+The six commands are also split into three categories which are identified by the
+arrows next to each command as follows:
+<br><br>
+<table border="1" cellpadding="8" cellspacing="0" bordercolor="#b0b0b0" width="100%">
+  <tr>
+    <td><center>
+        <img src="../images/Ylbl.png"><br>
+        <img src="../images/Yupdown.png" vspace="10"><br clear="all">
+        <b><font size="+1">Modify&uarr;&darr;<br>Range&uarr;&darr;</font></b>
+        </center>
+    </td>
+    <td>These are perhaps the two most commonly used of the data editing menus.
+    As soon as you select the editing mode, the regular data cursor disappears and is replaced by an 
+	editing cursor with a different shape. (See data editing cursor shapes 
+	below). Then you can grab the edit cursor with the mouse and drag it to the 
+	desired location. However you will only be able to move the cursor up and 
+	down (i.e. only the y coordinate is allowed to change). This is useful because
+    in many data sets, the independent variable (x) represents a specific chosen set
+    that you want to keep fixed. As soon as you release the mouse button (after 
+	the edit cursor has been dragged to its new location) the edit command will 
+	take effect, the edit cursor will disappear, and the normal data cursor will 
+	reappear. The cursor then reverts to its usual data exploration function, and
+    to edit another data point you must right click yet again on the Ycursor edit
+    box and select the desired data edit operation. This back and forth operation
+    (which I will call the "normal editing mode" is convenient when you just have a
+    few data points to modify, but can become cumbersome when you want to edit many
+    data points in succession. In that situation you can switch to "persistent editing
+    mode". (The persistent editing mode applies only to the three Modify selections
+    and does not apply to any of the Range selections). To enable the persistent
+    editing mode for Modify up/down, bring up the data editing menu as usual, but
+    then instead of left clicking on the Modify up/down selection, click on it with
+    the right mouse button. The label in front of the Ycursor edit box (gray) normally
+    contains the letter "y" (as shown to the left) but this label will switch to the
+    delta symbol (shown to the left) which indicates that you are now in persistent
+    editing mode. Once in this persistent mode, you can continue to modify as many
+    points on the graph as you want (including insert and delete operations) without
+    having to open the data editing menu each time. The only drawback is that you
+    have to forgo the usual data exploration features of the cursor, however you
+    can restore the default mode by double RIGHT clicking on the Ycursor edit box.
+    (at which point the Ycursor label changes from the delta back to the "y").
+    </td>
+  </tr>
+  <tr>
+    <td><center>
+        <img src="../images/Yleftright.png" vspace="3"> <br clear="all">
+        <b><font size="+1">Modify&harr;<br>Range&harr;</font></b>
+        </center>
+    </td>
+    <td>These two menu options behave identically to the two commands described above except for the
+        fact that with the mouse you can only drag the cursor left or right (i.e. only the x coordinate 
+        is allowed to change). It is far more common to want to change the y coordinate (using the
+        selections above) or to use the selections below to have the freedom to move the point
+        anywhere (modifying both coordinates), however the left/right option is included for completeness. You can also select this option with the persistent editing mode by right clicking on the
+        Modify left/right option. The gray "y" label of the Ycursor editbox changes to a ">" greater
+        than sign (as shown at the left) to indicate the persistent mode is enabled.
+        Again, you can restore the normal editing mode by double RIGHT clicking on the Ycursor edit box, which will cause the label to revert to "y" indicating the normal editing mode.</td>
+  </tr>
+  <tr>
+    <td><center>
+        <img src="../images/Yfree.png" vspace="3"> <br clear="all">
+        <b><font size="+1">&nbsp;&nbsp;Modify&nbsp;&nbsp;<br>&nbsp;&nbsp;Range&nbsp;&nbsp;</font></b>
+        </center>
+     </td>
+    <td>When using these last two menu options you can use the mouse to drag the edit cursor anywhere
+        (i.e. you can change both the x and y coordinates of the point.
+        You can select this option with the persistent editing mode by right clicking on the
+        Modify option. The gray "y" label of the Ycursor editbox changes to a solid diamond symbol
+        (as shown at the left) to indicate the persistent mode is enabled.
+        Again, you can restore the normal editing mode by double RIGHT clicking on the Ycursor edit box, which will cause the label to revert to "y" indicating the normal editing mode.
+        <br><br>With all six editing menu options, when you have the opportunity to drag the edit cursor
+        to a new location, you also have the option of typing a new x or y value into the x or y cursor
+        edit boxes. This allows you to enter values more precisely than what is possible with a mouse
+        movement. In all six modes, you may enter a new value in either the x or y edit boxes. (So,
+        for example with the Modify up/down selection, you can still type in a new value into the x edit
+        box, thus bypassing the "y-only" restriction of the mouse movement.
+        In addition to moving the edit cursor with the mouse, 
+    </td>
+  </tr>
+</table>
+<br>
+<img src="../images/EditCur.png" align="left" hspace="10" vspace="10">
+<br>The usual data cursor is a plus sign or a small circle. Once you select one of the 
+six editing modes, the data cursor changes to one of the six edit cursors 
+shown in this figure. Although it wouldn't really be necessary to have a different 
+cursor for each mode, it does help you remember what mode you are currently in. 
+<br clear="left">
+<h3>Data Editing programming features</h3>
+Although programming features and techniques are generally discussed in the
+"Programming with plt section, the following information is included here because
+it relates closely with the data editing user interface features shown above.
+<br><br>
+If you don't like the default size that plt chooses for the six data edit cursors,
+(shown in the table above) you can change this with a command such as:
+<span class="mcode">setappdata(gcf,'CurEdit',14)</span>.
+The new size will be used the next time a cursor edit mode is selected.
+<br><br>
+If you want to prevent a line from being edited, set the line's tag property
+to <span class="mcode">'NoEdit'</span>. With that line property set, any attempt
+to edit that line will be ignored.
+<br><br>
+If plt was called using the <span class="mcode">MotionEdit</span> parameter, the 
+function specified with that parameter will be called continuously as you 
+drag the edit cursor around. This function may be used to create or modify text, 
+plots or other gui objects on the screen. Both the <span class="mcode">editz.m</span>
+and  <span class="mcode">pltquiv.m</span> examples demonstrate the use of the MotionEdit
+parameter. (Also see <a href="../Programming%20with%20plt/Cursor%20commands.htm">Mouse Motion Functions</a>)
+<br><br>
+If you want to save the altered data (to a file for example) you have to get the 
+data from the 'xdata' and 'ydata' properties of the line handle. (Remember the 
+line handles are returned by the plt call.) When the user modifies any data 
+using these data editing functions, plt executes the user specified move cursor 
+callback. (See the description of the <span class="mcode">'set','moveCB'</span> 
+function <a href="../Programming%20with%20plt/Cursor%20commands.htm">here</a>.) 
+The callback routine or any other part of your application can use the <span class="mcode">'NewData'</span> 
+application property of the current figure window to determine if data has been 
+modified by one of the data edit commands. For example:
+<br clear="left">
+
+<br><span class="mcode">index = getappdata(gcf,'NewData'); </span>% returns the index where xdata/ydata was modified
+<br><span class="mcode">if index &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+				 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+                                 &nbsp; &nbsp; &nbsp; </span>% is there any new data?
+<br><span class="mcode">&nbsp; DataWasModifiedAction(index); &nbsp; &nbsp;</span>% yes, process the new data
+<br><span class="mcode">&nbsp; setappdata(gcf,'NewData',0); &nbsp; &nbsp; </span> % indicate that the data was already processed
+<br><span class="mcode">end;</span>
+<br><br>
+Note that the <span class="mcode">NewData</span> property only gets set after a data edit 
+operation is complete, unlike the <span class="mcode">MotionEdit</span> function 
+which gets called as you are dragging a cursored value to its new location. 
+There is one additional figure application data variable called
+<span class="mcode">Dedit</span> that may also be useful for an application 
+using the data editing feature. The command <span class="mcode">
+getappdata(gcf,'Dedit')</span> will return the following 9 element cell array:<br><br>
+
+<table border="1" cellpadding="8" cellspacing="0" bordercolor="#b0b0b0" width="100%">
+        <caption><font size="+2" color="#4040ff"><i><b>'Dedit' figure application data (cell array)</b></i></font></caption>
+  	<tr>	<td><center><b>1</b></center></td>
+		<td>The CursorID associated with the edited trace </td>
+	</tr>
+	<tr>	<td><center><b>2</b></center></td>
+		<td>A number from 1 to 6 which identifies which data edit command 
+            is being used (in the order that they appear in the popup):<br><span class="mcode3"><b>
+             &nbsp; &nbsp; 1:&nbsp; Range<br>
+             &nbsp; &nbsp; 2:&nbsp; Range Left/Right<br>
+             &nbsp; &nbsp; 3:&nbsp; Range Up/Down<br>
+             &nbsp; &nbsp; 4:&nbsp; Modify<br>
+             &nbsp; &nbsp; 5:&nbsp; Modify Left/Right<br>
+             &nbsp; &nbsp; 6:&nbsp; Modify Up/Down<br></b>
+        </td>
+	</tr>
+	<tr>    <td><center><b>3</b></center></td>
+		<td>The handle of the cursor object associated with the modified data.</td>
+	</tr>
+	<tr>	<td><center><b>4,5</b></center></td>
+		<td>For internal use. (This saves the cursor marker shape and size so
+		that the normal cursor can be restored when the data edit operation is complete.)</td>
+	</tr>
+	<tr>	<td><center><b>6</b></center></td>
+		<td>For internal use. (This saves the edited trace x/y data so that it can be
+        restored by the undo function (right clicking on the "Cancel" option)
+	</tr>
+	<tr>    <td><center><b>7,8</b></center></td>
+		<td>For internal use. (This saves the position index and trace number of the
+		previously edited trace - information is needed for the modify range operations.)</td>
+	</tr>
+
+	</tr>
+	<tr>    <td><center><b>9</b></center></td>
+		<td>The position index of the cursor into the edited trace</td>
+	</tr>
+</table>
+<br>
+After performing a data edit operation it is likely that you will want to 
+perform another data edit using the same data edit command. Thus it would be 
+nice if you could initiate another data edit operation without having to again 
+select one of the nine data editing operations. In fact there is a way to do 
+this - simply right-click on the Xcursor edit box. This behaves similarly to 
+what happens when you right-click on the Ycursor edit box except you don't get 
+the menu of data editing choices, since it will use your previous selection. 
+There has to be a default for this operation in case the user right-clicks on 
+the Xcursor edit box before doing any other data edit operation. The default is 
+&quot;Modify&quot; since this is the most commonly used operation. It is rare 
+to want to change this default, although you can do so by changing the second
+element of the Dedit application variable as described above.
+<br><br>
+If you create a figure with a plt command that includes the parameter
+<span class="mcode">'MotionEdit','funcname'</span>, then while you are modifying a data value
+by using the data editing feature, the function <span class="mcode">funcname(a)</span> will
+be continually called as the mouse is moved (i.e.&nbsp; for as long as the mouse button is held down).
+The parameter "a" is a nine element cell array containing information related to the edited trace
+(as described in the table above). Alternatively you can define the MotionEdit function
+after the call to plt with the following command:
+<br><br>
+<span class="mcode"> &nbsp; &nbsp; setappdata(gca,'MotionEdit',{@funcHandle param1});</span>
+<br><br>
+The example <a href="Programming%20examples.htm">demo\editz.m</a> 
+shows how the MotionEdit function can be used to reposition the plotted poles and zeros.
+Note that allowing the plot to be updated as the data is being edited has an impressive
+advantage for that application.
+<br><br>
+The <span class="mcode">pltquiv.m</span> example also demonstrates the use of
+the MotionEdit parameter to update the polynomial interpolation of a vector field
+in real time.
+<br><br>
+In addition, you may also define functions which get called when a data edit operation begins
+or terminates. These two functions (respectively) may be defined as follows:
+<br><br>
+<span class="mcode"> &nbsp; &nbsp; setappdata(gcf,'EditStart',@StartFuncName);</span><br>
+<span class="mcode"> &nbsp; &nbsp; setappdata(gcf,'EditStop', @StopFuncName);</span>
+
+<br><br>
+Usually you enter one of the data editing modes by selecting one of the entries
+in the Yedit popup menu with the mouse, however this can be initiated from a program as well.
+For example the command <nobr><span class="mcode">plt click Yedit 6;</span></nobr>
+or its functional form <nobr><span class="mcode">plt('click','Yedit',6);</span></nobr>
+puts the cursor into the "modify up/down" mode, since that is the 6th selection
+in the menu shown above. (Note that the "6" refers to the sixth entry in the Yedit
+popup menu. The full list of commands similar to this is shown in the table below:<br><br>
+<table>
+  <tr><td><span class="mcode">plt xleft EDIT 1;</span></td>
+      <td>Enter data editing (using last used editing mode)</td>
+  <tr><td><span class="mcode">plt xleft EDIT 2;</span></td>
+      <td>Open up Yedit popup menu</td>
+  <tr><td><span class="mcode">plt xleft EDIT 5;</span></td>
+      <td>Exit data editing mode</td>
+  <tr><td><span class="mcode">plt xleft Yedit 4;</span></td>
+      <td>Cancel data editing mode</td>    
+  <tr><td><span class="mcode">plt xleft Yedit 5;</span></td>
+      <td>Enter data edit mode (Range)</td>    
+  <tr><td><span class="mcode">plt xleft Yedit 6;</span></td>
+      <td>Enter data edit mode (Range left/right)</td>    
+  <tr><td><span class="mcode">plt xleft Yedit 7;</span></td>
+      <td>Enter data edit mode (Range up/down)</td>    
+  <tr><td><span class="mcode">plt xleft Yedit 8;</span></td>
+      <td>Enter data edit mode (Modify)</td>    
+  <tr><td><span class="mcode">plt xleft Yedit 9;</span></td>
+      <td>Enter data edit mode (Modify left/right)</td>    
+  <tr><td><span class="mcode">plt xleft Yedit 10;</span></td>
+      <td>Enter data edit mode (Modify up/down)</td>    
+  <tr><td><span class="mcode">plt xright Yedit 8;</span></td>
+      <td>Enter persistent data edit mode (Modify)</td>    
+  <tr><td><span class="mcode">plt xright Yedit 9;</span></td>
+      <td>Enter persistent data edit mode (Modify left/right)</td>    
+  <tr><td><span class="mcode">plt&nbsp;xright&nbsp;Yedit&nbsp;10;&nbsp;</span></td>
+      <td>Enter persistent data edit mode (Modify up/down)</td>    
+</table>
+
+</body>
+</html>

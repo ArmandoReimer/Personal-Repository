@@ -1,0 +1,1038 @@
+% pltinit.m:  An alternative to plot & plotyy
+% Author:     Paul Mennen (paul@mennen.org)
+%             Copyright (c) 2020, Paul Mennen
+
+%define
+PLTversion = '03Jan20';
+%end_define
+
+%include
+  pltcase;   % switch/case strings
+  pltdef;    % index definitions
+  abrev;     % graphic property abreviations
+%end_include
+
+function [Ret1,Ret2] = pltinit(varargin); % initialize the plot
+
+Ret1 = 0;  % Compiler wants this for some reason
+Ret2 = 0;
+Narg = nargin;
+Mver = version;  Mver = sscanf(Mver(1:3),'%f');
+MverE = (Mver<8.4); % True for "Early" Matlab versions (R2014a or earlier) using old graphics engine
+                    % False for "Late" Matlab versions (R2014b or later) using new graphics engine
+if MverE  ERAS = 'eras';  ERAXOR = 'xor';  ERANOR = 'norm'; % for Matlab R2014a or earlier
+else      ERAS = 'pi';    ERAXOR = 'v';    ERANOR = 'v';    % Matlab R2014b or later doesn't
+end;                                                        % support the erasemode property
+
+cTRACE  = [0  1  0;   1  0  1;   0  1  1;   1  0  0;  .2 .6  1;  % plt default trace colors
+           1  1  1;   1 .6 .2;  .3 .3  1;   1 .2 .6;  .2  1 .6;
+          .8  1 .5;  .6 .2  1;   1  1  0;   0 .5  0;  .5  0 .5;
+           0 .6 .6;   0  0 .9;   0 .3 .3;  .5  0  0;  .3 .3  0;
+          .7 .2 .2;  .2 .7 .2;  .3 .3 .3;  .4 .4 .7;   0 .6 .3;
+          .8 .5 .5;  .4 .6 .3;  .5 .5  0;  .7 .7 .2;  .5 .5 .5;
+          .7 .2 .7;   1 .4 .4;  .4  1 .4;  .4 .9  0;  .5 .1 .3;
+          .3  0 .8;   0  0 .5;  .5 .5  1;   0 .3 .8;  .7 .2  0];
+for k=41:maxLN cTRACE = [cTRACE; .74 * cTRACE(k-40,:)]; end;
+
+posFIG  = 0;                % use default figure position (from figpos.m)
+AXISp   = [];               % used to change default axis positions
+o4      = ones(1,4);
+idPOS   = o4;               % Trace ID position modifier
+axisPOS = o4;               % will contain corrections to default axis position
+cFIGbk  = [.25 .15 .15];    % Figure background color
+cPLTbk  = [ 0   0   0 ];    % Plot background color
+cTID    = [];               % will be TraceID box color
+cXYax   = [ 1   1   1 ];    % Axis color
+cXYlbl  = [.7  .8  .95];    % Axis label color (also title & menubox)
+CURcDEF = [ 1   1  .50];    % Cursor color default
+cCURSOR = CURcDEF;          % Cursor color
+cDELTA  = [ 1   0   0 ];    % Delta cursor color
+cPLTbk2 = [];
+cFIGbk2 = [];
+cTRACE2 = [];
+cDELTA2 = [];
+cXYlbl2 = [];
+cDEFAULT = cTRACE;          % save plt defaults in case cTRACE is redefined
+Grid = 'on';                % Grids on by default
+cGRIDs  = 0;                % =1 to indicate cGRID specified in argument list
+GridSt  = 0;                % =1 to indicate GridSty specified in argument list
+GridSty = '-';              % Grid style default
+cGRID = [.13 .13 .13];      % Grid color default
+cDEF    = 0;                % =1 to indicate matlab default colors
+LabelX = 'X axis';          % x-axis label
+LabelY = 'Y axis (Left)';   % y-axis label
+LabelYr = 'Y axis (Right)'; % y-axis label for right hand axis
+Title = '';                 % plot title
+Xlim   = 'default';         % let Matlab pick Xlim by default
+Ylim   = 'default';         % let Matlab pick Ylim by default
+YlimR  = 'default';         % let Matlab pick Ylim by default
+Xscale = 'linear'; Xsc = 'LinX';
+Yscale = 'linear'; Ysc = 'LinY';
+Mbar = 0;                   % MenuBar off by default
+Xslide = 0;                 % Xaxis slider control - off by default
+LineSmooth = 0;             % Line smoothing - off by default
+FigShow = 1;                % Figure is visible by default
+helpT = 0;                  % indicate help text has not been defined
+HelpFile = '';              % use default help file (left click)
+HelpFileR = '';             % use default help file (right click)
+cFile = '#';                % indicates the default colorfile naming convention
+ENApre = [1 1];             % enable metric prefixes on x & y axis
+ENAcur = ones(1,maxLN);     % enable cursors for all traces
+DIStrace = 0;               % enable all traces
+Style  = 0;                 % use default line style
+Marker = 0;                 % use default line markers (none)
+AXr = 0;                    % indicate that the right axis is not in use
+Right = [];                 % lines to use the right hand axis
+DualCur = 0;                % trace # for dual cursor (0 if no dual cursor)
+TIDcback = '';              % trace ID callback function
+TIDcolumn = 0;              % # of Trace IDs to put in the second column
+MenuBox = [1 1 1 1 0 1 1 1 1];  % All menu box items enabled except print
+npch = zeros(1,maxLN);      % indicate no patch required (pltt)
+TRACEid = reshape(sprintf('Line%2d',1:maxLN),6,maxLN)'; % default trace names
+TRACEmk = 0;                % indicate no trace markers
+Xstring = '';               % X-axis auxiliary cursor string
+Ystring = '';               % Y-axis auxiliary cursor string
+moveCB = '';                % cursor move callback
+axisCB = '';                % axis scaling callback
+ucreq = '';                 % user defined close request function
+axLink = 1;                 % by default, link right/left axes
+SubPlot = [];               % indicate no subplot axes
+SubTrace = [];              % indicates default subplot trace assignment
+NoCursor = 0;               % 1 indicates no cursor objects
+xViewOpt = 0;               % indicate not using xView slider
+multiCurOpt = 0;            % indicate not using multiCursor
+BtnGroup = 1;               % indicates that the cursor button group is enabled
+aLp = {}; aLv = {};         % save properties & values to apply to left axis
+aRp = {}; aRv = {};         % save properties & values to apply to right axis
+lLp = {}; lLv = {};         % save properties & values to apply to left y label
+lRp = {}; lRv = {};         % save properties & values to apply to right y label
+lXp = {}; lXv = {};         % save properties & values to apply to x label
+TIp = {}; TIv = {};         % save properties & values to apply to the title
+posPEAK = [.0071  .0441  .0250  .0343];
+posVALY = [.0071  .0060  .0250  .0343];
+posDEL  = [.0350  .0441  .0280  .0343];
+posM    = [.0350  .0060  .0280  .0343];
+posSLDR = [.0071  .0080  .1250  .0200];
+posBox  = [.0070  .0870  .0580  .0000];
+
+addSlots = 0;                            % indicate we don't need to add slots to the TraceID box
+if exist('addSlots')
+     MLalive = 1;                        % true indicates matlab is running
+     dbs = feval('dbstack');             % feval to prevent compiler warning
+     n = length(dbs);  FigName = '';
+     if n  a = stripp(dbs(1).name);
+           if ~strcmp(a,'pltinit') FigName = a;
+           elseif n>1 a = stripp(dbs(2).name);
+                      if ~strcmp(a,'plt') FigName = a;
+                      elseif n>2 FigName = stripp(dbs(3).name);
+                      end;
+           end;
+     end;
+     if isempty(FigName) FigName = 'plt'; addSlots = 1; end;
+else MLalive = 0;                        % indicate compiled application
+     GetExee = GetExe;                   % get name of currently executing exe file
+     FigName = getappdata(0,'FigName');
+     if length(FigName) setappdata(0,'FigName',[]);
+     else               [temp FigName] = fileparts(GetExee);
+     end;
+end;
+
+fontsz = (196-get(0,'screenpix'))/10; % choose font appropriate to screen res
+                                      %  System font size     screenpix  fontsize
+                                      %  ------------------   ---------  --------
+                                      %  Small fonts (100%)      96         10
+                                      %  Large fonts (125%)     116          8
+a1 = varargin{1};  exFig = ischar(a1);
+if exFig exFig = (sum(lower(a1)) == fig_); end;      % Look for the 'Fig' parameter which won't be used
+if exFig FIG = varargin{2};                          % unless it is either the first or the last
+elseif nargin>3                                      % parameter in the argument list
+  a1 = varargin{end-1}; exFig = ischar(a1);
+  if exFig exFig = (sum(lower(a1)) == fig_); end;
+  if exFig FIG = varargin{end}; end;
+end;
+if exFig figure(FIG);  set(FIG,HIDE);                % use specified existing figure
+         posFIG = get(FIG,POS)*1i;
+else     FIG = figure(NoMENU,HIDE);                  % create a new figure
+end;
+if MverE  FIGt = FIG;                                % for Matlab R2014a or earlier
+          posAX   = [.1429  .0933  .8329  .8819];
+else      posAX   = [.1429  .1033  .8329  .8719];    % Matlab R2014b or later (Xaxis label farther from axis)
+          FIGt = get(FIG,'number');                  
+end;    % FIGt  will be figure tag (for linking figure close requests)
+set(FIG,'PaperPositionMode','auto',INVERTHC,'off','PaperOrient','land',...
+        'PaperUnits','norm','DoubleBuf','on','Invert','on');
+if Mver<7 figure(FIG); end;   % needed only for matlab 6.1 (a bug in that old version?)
+AX = axes(NORMAL,FONTSIZE,fontsz,TAG,'click');
+
+Ret1 = [];  nt = 0;   % Initialize line handles & number of traces
+kparam = [];          % save parameters for "plt save"
+k = 1;                % start at first y argument
+pp = 1;
+while k<=Narg
+  y  = varargin{k};  k=k+1;
+  if ischar(y)
+    if k>Narg
+       disp('Error using ==> plt.  Not enough input arguments.');
+       disp('For help on using plt, type "help plt"');
+       eval(SHOWhelp);
+       return;
+    end;
+    kparam = [kparam k-1 k];
+    y = lower(y);  yy = varargin{k};   k=k+1;
+    pfx = zeros(1,6); % special prefixes: apply to left/right axis, left/right y label, x label, title respectively
+    while length(y)>1
+      b = findstr(y(1),'+-<>.^');
+      if isempty(b) break; end;
+      pfx(b) = 1;  y(1) = [];
+    end;
+    switch sum(y)
+      case title_,     Title    = yy;
+      case xlim_,      Xlim     = yy;
+      case ylim_,      Ylim     = yy;
+      case ylimr_,     if y(1)=='y'  YlimR = yy;  AXr = 1; else cXYax = ctrip(yy); end;
+      case labelx_,    LabelX   = yy;
+      case labely_,    LabelY   = yy;
+      case labelyr_,   LabelYr  = yy;  if length(yy) AXr = 1; end;
+      case right_,     Right    = yy;  if length(yy) AXr = 1; end;
+      case dualcur_,   DualCur  = yy;
+      case figname_,   FigName  = yy;
+      case pltbkc_,    cPLTbk   = ctrip(yy); cPLTbk2 = cPLTbk;
+      case figbkc_,    cFIGbk   = ctrip(yy); cFIGbk2 = cFIGbk;
+      case tracec_,    cTRACE   = ctrip(yy); cTRACE2 = cTRACE;
+      case deltac_,    cDELTA   = ctrip(yy); cDELTA2 = cDELTA;
+      case xylblc_,    cXYlbl   = ctrip(yy); cXYlbl2 = cXYlbl;
+      case cursorc_,   cCURSOR  = ctrip(yy);
+      case tidc_,      cTID     = yy;
+      case gridc_,     yy = ctrip(yy);  if any(yy<0) GridEr = ERANOR; else GridEr = ERAXOR; end;
+                       cGRID    = abs(yy);  cGRIDs = 1;
+      case gridstyle_, GridSty = yy;        GridSt = 1;
+      case styles_,    if iscell(yy) Style = char(yy);   else Style = yy;   end;
+      case markers_,   if iscell(yy) Marker = char(yy);  else Marker = yy;  end;
+      case traceid_,   if iscell(yy) TRACEid = char(yy); else TRACEid = yy; end;
+      case tracemk_,   if length(yy)==1 & yy  yy = [yy (yy+.9)/2 .9]; end;
+                       TRACEmk = yy; % position of trace markers in traceID box
+      case enacur_,    ENAcur   = yy;
+      case distrace_,  DIStrace = yy;
+      case {pos_ position_}, posFIG = yy;
+      case xy_,        [rw cl] = size(yy);
+                       if rw==1 & cl==4 AXISp = [0 yy]; % 4 element row vector is used for the position of left & right axes
+                       elseif cl~=5 disp('Warning: xy parameter ignored. Must have 5 columns');
+                       else AXISp = yy;
+                       end;
+      case axispos_,   axisPOS  = yy(1:4);
+                       switch length(yy) case 5, idPOS(3)=yy(5); case 8, idPOS=yy(5:8); end;
+      case tidcback_,  TIDcback = yy;   % trace ID callback function
+      case tidcolumn_, TIDcolumn = yy;  % trace ID columns
+      case xstring_,   Xstring  = yy;   % X-axis auxiliary cursor string
+      case ystring_,   Ystring  = yy;   % Y-axis auxiliary cursor string
+      case enapre_,    if length(yy)==1 yy = [yy yy]; end;  ENApre = yy;
+      case helpfile_,  HelpFile = yy;
+      case helpfiler_, HelpFileR = yy;
+      case colorfile_, cFile    = yy;   % if set to [], plt does not attempt to read a color file
+                                        % and a file selection dialog will be used on color save
+      case colordef_,  cDEF = 1;        % indicate matlab default colors
+                       cPLTbk = get(0,'defaultaxescolor');
+                       cFIGbk = get(0,'defaultfigurecolor');
+                       cXYax  = get(0,'defaultaxesxcolor');  cXYlbl = cXYax;
+                       if ischar(yy) | (sum(size(yy))==2 & yy==0) yy = 999999; end; % 0 or 'default' uses matlab's trace default
+                       yy = ctrip(yy);
+                       if all(yy(1,:)==.99) yy = [get(0,'defaultaxescolororder'); yy(2:end,:)]; end; % append mode
+                       cTRACE = yy;
+      case movecb_,    moveCB = yy;
+      case axiscb_,    axisCB = yy;
+      case axislink_,  axLink = yy;
+      case link_,      if length(yy) if MverE FIGt = yy;               % for Matlab R2014a or earlier
+                                     else     FIGt = get(yy,'Number'); % Matlab R2014b or later
+                                     end;
+                       end;
+      case closereq_,  ucreq = yy;
+      case subplot_,   SubPlot = yy;  ENApre(1) = 0; % disable x-axis metric prefixes when using subplots
+      case subtrace_,  SubTrace = yy; ENApre(2) = 0; % disable y-axis metric prefixes when using subtrace
+      case MotionEdit_, setappdata(gca,'MotionEdit',yy);
+      case MotionZoom_, setappdata(gca,'MotionZoom',yy);
+      case MotionZup_,  setappdata(gca,'MotionZup',yy);
+      case fig_,       % do nothing (already taken care of)
+      case helptext_,  plt('helptext','set',yy);  helpT = 1;  HelpFileR = 'plt helptext on;';
+      case plus_,      if length(yy)~=1 | yy<1 | mod(yy,1) | yy>1000      % yy must be a positive integer
+                            disp('Illegal ''+'' parameter was ignored');
+                       else H = line(NaN,NaN+zeros(1,yy));                % reserve yy lines for pltt()
+                            Ret1 = [Ret1; H]; nt1=nt+1; nt = nt+length(H);
+                            npch(nt1:nt) = 1;
+                            [tidn tidw] = size(TRACEid);
+                            while tidn < nt
+                               tidn=tidn+1; s=sprintf('+%d                                ',tidn);
+                               TRACEid = [TRACEid; s(1:tidw)];
+                            end;
+                       end;
+      case options_,   kq = 0;
+        while kq < length(yy)
+          kq = kq + 1;
+          switch yy(kq)
+            case 'T', Grid = 'off';
+            case 'M', Mbar = 1;
+            case 'X', Xsc = 'LogX';  Xscale = 'Log';
+            case 'Y', Ysc = 'LogY';  Yscale = 'Log';
+            case 'S', Xslide = 1;
+            case 'L', LineSmooth = 1;
+            case 'B', BtnGroup = 0;    % indicates no cursor button group
+            case 'N', NoCursor = 1;    % indicate no cursor objects
+            case 'H', FigShow = 0;     % indicates the figure will remain hidden
+            case 'V', xViewOpt = 1;    % enable xView slider
+            case 'C', multiCurOpt = 1; % use multiCursor
+            case 'I', cFile = '';      % Ignore color file
+            case '-', kq = kq + 1;  km =findstr(yy(kq),'HXYGPFMZRA');
+                      if length(km) if km==10 MenuBox=0; else MenuBox(km)=0; end; end;
+            case '+', kq = kq + 1;  km =findstr(yy(kq),'HXYGPFMZRA');
+                      if length(km) if km==10 MenuBox=ones(1,9);
+                                    else if pp & km~=5 MenuBox=0; pp=0; end;
+                                         MenuBox(km)=1;
+                                    end;
+                      end;
+          end;  % end switch yy(kq)
+        end;  % end while kq < length(yy)
+      otherwise, % otherwise if the property begins with one of the characters '+-<>.'
+         if sum(pfx)
+           if pfx(1) aLp = [aLp {y}]; aLv = [aLv {yy}]; end; % '+' apply yy to left axis property y
+           if pfx(2) aRp = [aRp {y}]; aRv = [aRv {yy}]; end; % '-' apply yy to right axis property y
+           if pfx(3) lLp = [lLp {y}]; lLv = [lLv {yy}]; end; % '<' apply yy to left y label property y
+           if pfx(4) lRp = [lRp {y}]; lRv = [lRv {yy}]; end; % '>' apply yy to right y label property y
+           if pfx(5) lXp = [lXp {y}]; lXv = [lXv {yy}]; end; % '.' apply yy to x label property y
+           if pfx(6) TIp = [TIp {y}]; TIv = [TIv {yy}]; end; % '^' apply yy to title property y
+         else   % if does not start with '+-<>.' then apply yy to property y of all lines defined so far
+           if iscell(yy)                 % is it a cell array
+             if length(yy)==length(Ret1) % is it of the expected length?
+               y = {y};                  % yes, each cell array element goes to each line respectively
+               yy = yy(:);               % allow either row or column cell arrays
+             else fprintf('Warning: For parameter %s, found %d elements but expected %d\n',y,length(yy),length(Ret1));
+             end;
+           end;
+           set(Ret1,y,yy);
+         end;
+    end; % end switch y
+  else
+     ny = 0;
+     if k<=Narg                yy = varargin{k}; else yy = 'a'; end;
+     if iscell(y) & iscell(yy) k = k+1;  ny = length(y);
+                               if length(yy) == ny
+                                 for m=1:ny
+                                   H = line(y{m},yy{m}); Ret1=[Ret1; H]; nt=nt+length(H);
+                                 end;
+                               else disp('Error: Cell array pair must have the same length');
+                              end;
+     elseif ~isreal(y)         yy = imag(y);  y = real(y);
+     elseif isnumeric(yy)      k = k+1;
+     elseif iscell(yy)         k = k+1;  yy = feval('cell2mat',yy); % this form not supported with compiler
+     else                      yy=y; y=1:length(yy);
+     end;
+     if ~ny  H = line(y,yy);  Ret1 = [Ret1; H];   nt = nt + length(H); end;
+  end;     % end if ischar(y)
+  if addSlots & k>=Narg & ~sum(npch) Narg=Narg+2; varargin = [varargin {'+' 8}]; end;
+end;       % end while k<=Narg
+
+if iscell(Ylim) YlimR = Ylim{2}; Ylim = Ylim{1}; AXr = 1; end;
+if ~iscell(LabelX) LabelX = {LabelX}; end;
+if ~iscell(Xlim)   Xlim   = {Xlim};   end;
+if (length(LabelX)>1 | length(Xlim)>1) & isempty(SubPlot) & nt>1 SubPlot = [100i -50 100]; end;
+
+if length(SubPlot)
+  indep = ~isreal(SubPlot(1));                   % use an imaginary first term to indicate independent subplots
+  if indep SubPlot(1) = imag(SubPlot(1));
+  else indep=-1;                                 % 1/-1 indicates indep/linked mode, zero indicates no subplots
+  end;
+  if SubPlot(end)>0 SubPlot=[SubPlot -999]; end; % indicate no width given for last column
+  k = find(SubPlot<0);                           % point to column widths
+  npC = diff([0 k])-1;  nC = length(npC);        % number of plots per column, number of columns
+  dx = -SubPlot(k);  SPw = floor(dx);            % SPw = width of each column of subplots
+  SubPlot(k) = [];                               % SubPlot now contains only the plot widths
+  nSP = length(SubPlot);                         % # of subplots     including main plot (zero if no subplots)
+  nSPm = nSP - 1;                                % # of subplots not including main plot (zero if no subplots
+  if iscell(LabelY) & (length(LabelY)>nSP) AXr=1; end;
+  if max(npC) == 1 indep = 1; end;               % no reason for linked mode
+  dc = .1;                                       % default space between each column (10% of plot area)
+  dw = (3 + (indep>0)*(2-MverE))/100;            % default vertical plot spacing (3%, 4%, or 5% of plot area)
+  dx = dx-SPw; dx = dx-(dx>.5)+dc;               % dx is the space desired to the left of each column
+  if SPw(end)==999 SPw(end)=1099-sum(SPw); end;  % if last width is unspecified, column widths will sum to 100
+  SPdy = SubPlot;  SubPlot = floor(SPdy);        % SPdy will have the extra space requested below each plot
+  SPdy = SPdy-SubPlot;  SPdy=SPdy-(SPdy>.5)+dw;  % A fractional part of .98 will decrease the allotted space by 2 percent
+  SubPlot = SubPlot/100;  SPw = SPw/100;         % convert from percent to fraction
+  if ~(posFIG)                                   % default in case figure position wasn't specfied
+    posFIG = round([980-280/nC 600-75/max(npC)]);
+  end;
+  posFIG = figpos(posFIG);                       % position in available region
+  if AXr rsp = 40/posFIG(3);                     % if right hand axis, use 40 extra pixels between columns 1 & 2
+         if length(dx)<2 SPw = SPw-rsp;
+         else            dx(2) = dx(2)+rsp;
+         end;
+  end;
+  SPw = SPw - (sum(dx)-dc)/nC;                   % reduce column widths to account for inter-column spacing
+  SPx = cumsum(dx + [0 SPw(1:end-1)]) - dc;      % x location of left edge of each column (relative to plot area)
+else  npC=1; nC=1; nSP=0; nSPm=0; indep=0;       % no subplots -------------------------------
+      posFIG = figpos(posFIG);                   % position in available region
+end;
+if ~exFig | ~indep setappdata(gcf,'indep',indep); end; % save subplot mode
+                                                       %(all calls to plt to the same figure must use the same subplot mode)
+nID = nt - nSPm * isempty(SubTrace);             % don't need TraceID's for subplots (unless SubTrace parameter is used)
+if nID>maxLN & TRACEid disp(sprintf('Max # of traceIDs = %d',maxLN)); return; end;
+if ~iscell(LabelY) LabelY = {LabelY}; end;
+if length(LabelY) >= nSPm+2  LabelYr = LabelY{nSPm+2}; AXr = 1; end;
+
+setappdata(FIG,'params',varargin(kparam));
+if isempty(TIDcolumn)                            % TIDcolumn parameter included, but with an empty argument
+  if     nID>48 & nID<100  k = floor(nID/3); TIDcolumn = [k k];
+  elseif nID>24                              TIDcolumn = floor(nID/2);
+  else                                       TIDcolumn = 0;
+  end;
+end;
+k = sum(TIDcolumn);                              % user specifes # of IDs just for columns 2,3,...
+if k  TIDcolumn = [nID-k TIDcolumn]; else TIDcolumn = nID; end; % TIDcolumn is now # of IDs in each column
+ntid = max(TIDcolumn);                           % the number of IDs in the longest column
+ncol = length(TIDcolumn);                        % number of traceID columns
+if ncol>1 & all(axisPOS == o4) & all(idPOS == o4) & nID<100
+  idPOS(3) = ncol; % if AxisPos & idPos are unspecified, make a guess for multiple TraceID columns
+  axisPOS = [.4 + ncol/2, 1, (210-11*ncol-ncol^2)/200, 1];
+end;
+if all(idPOS == o4) & (nt<6 | isempty(LabelY{1})) & ~nSP
+   idPOS(3) = 1.2;           % use a wider traceID box if it won't run into the Y axis label
+end;
+fsep = length(findstr(cFile,filesep));
+if length(cFile) & ~fsep
+  if MLalive                 % here if running from matlab
+       m = feval('dbstack'); % use feval to avoid compiler warnings
+       if length(m)
+          n = m(end).name;
+          nq = findstr('(',n);
+          if length(nq) n = n(1:nq(1)-2); end;
+          np = findstr(filesep,n);
+          if length(np) np=np(end); else np=0; end;
+          if length(n)-np>30 & length(m)>1  n = m(end-1).name; end; % in case upper level is guide
+          m = feval('which',n);
+       else m = feval('which','plt'); % in case running from dll
+       end;
+  else m = GetExee;
+  end;
+  [pth, name] = fileparts(m);
+  if cFile(1) == '#' cFile = [name 'Color']; end;
+  cFile = fullfile(pth,[cFile '.mat']);
+end;
+if fsep cFile = [cFile '.mat']; end;
+cFileS = cFile;                        % used for "save figure colors" menu
+if exist(cFile)~=2 & length(cFile)
+  if MLalive                           % if running from matlab use folder containing plt.m
+       cpath = feval('which','plt.m'); % use feval to prevent compiler warning
+  else cpath = GetExee;                % for compiled code use folder containing matlab.exe
+  end;
+  cFile = [fileparts(cpath) filesep 'pltColorAll.mat'];  % look for overall color override file
+end;
+if exist(cFile)==2 load(cFile);
+                   if length(cPLTbk2) cPLTbk = cPLTbk2; end; % values in the command line will
+                   if length(cFIGbk2) cFIGbk = cFIGbk2; end; % override values in the color file
+                   if length(cTRACE2) cTRACE = cTRACE2; end;
+                   if length(cDELTA2) cDELTA = cDELTA2; end;
+                   if length(cXYlbl2) cXYlbl = cXYlbl2; end;
+end;
+if isempty(cTID) cTID = cPLTbk; end;  % unless specified, TraceID box color same as plot background
+if length(ENAcur)<nt  ENAcur = [ENAcur ones(1,nt-length(ENAcur))]; end;
+if length(DIStrace)<nt  DIStrace = [DIStrace zeros(1,nt-length(DIStrace))]; end;
+ndc = length(cTRACE(:,1));  % number of defined colors
+
+if isnumeric(Title) Title = num2str(Title); end;  % create the title
+terp = 'tex';
+if iscell(Title)
+  axisPOS = axisPOS .* [1 1 1 1 - length(Title)*.035];
+  ntx = findstr('[TexOff]',Title{1});
+  if length(ntx)==1  Title{1}(ntx:ntx+7) = []; terp = 'none'; end;
+elseif length(Title)
+  axisPOS = axisPOS .* [1 1 1 .96];
+  ntx = findstr('[TexOff]',Title);
+  if length(ntx)==1 Title(ntx:ntx+7) = [];  terp = 'none'; end;
+end;
+title(Title,COLOR,cXYlbl,HANDLEvis,'interp',terp); % add the title to the axis
+
+setappdata(AX,'DualCur',DualCur);
+if ~cGRIDs                                           % here if erase mode not yet specified
+  if AXr GridEr = ERAXOR; else GridEr = ERANOR; end; % xor mode only if there is a right hand axis
+end;
+if ~MverE & AXr & ~cGRIDs & ~GridSt      % change Grid defaults for R2014b with right axis
+  GridSty = ':';                         % Grid style default
+  cGRID = [.26 .26 .26];                 % Grid color
+end;
+if AXr & nID>1      % here if right hand axis is being used
+   if isempty(Right) Right = nID; end;
+   axisPOS = axisPOS .* [1 1 .937 1];
+   if ischar(YlimR) % shouldn't need this (default seems to get screwed up)
+     mn = inf;  mx = -inf;
+     if max(Right)>length(Ret1) disp('Error: Right trace number points to non-existing data'); return; end;
+     for k=Right
+       y = get(Ret1(k),YDATA);  mn = min(mn,min(y));  mx = max(mx,max(y));
+     end;
+      df=(mx-mn)/20; YlimR=[mn-df mx+df];
+      if ~diff(YlimR) YlimR = [mn mn+max(1e-12,mn*1e-12)];  end;
+   end;
+   if length(Right)==1 yclr = cTRACE(mod(Right-1,ndc)+1,:); else yclr = cXYax; end;
+   AXr = axes(NORMAL,FONTSIZE,fontsz,'YAxisLoc','right',YLIM,YlimR,...
+              COLOR,cPLTbk,XCOLOR,cXYax,YCOLOR,yclr,'xtick',[]);
+   if ~axLink LabelYr = ['\div ' LabelYr ' \div']; end;
+   ylabel(LabelYr,COLOR,yclr,HANDLEvis,MOUSE,'plt click link;');
+   set(Ret1(Right),PARENT,AXr); % associate the specified traces with the right axis
+   setappdata(AXr,'Lhandles',Ret1(Right));
+   axes(AX);  % bug in Matlab ver 2009b causes the figure to become visible after this command
+   set(gcf,HIDE); % bug workaround
+   AXrl = [AX AXr];
+else AXrl = AX;  AXr = []; set(AX,'Box','On');
+end;
+mrk = repmat('+',1,nt); % Use '+' to mark left axis cursors
+mrk(Right) = 'o';       % Use 'o' to mark right axis cursors
+ceq = isequal(cCURSOR,CURcDEF);  cEXPbox = [1 1 .51];
+if ceq & sum(cPLTbk)>2 cEXPbox=1-cEXPbox; cCURSOR=1-cCURSOR; end;
+curclr = [.7 .7 .7; 0 0 0; cEXPbox; cDELTA];
+ENAcurS = sum(ENAcur(1:nt));
+if ceq & ENAcurS>1 cCURSOR = [0 0 0]; end;
+for k=1:nt  set(Ret1(k),COLOR,cTRACE(mod(k-1,ndc)+1,:));
+            if ENAcur(k) curclr=[curclr; cCURSOR]; else  set(Ret1(k),NoCUR); end;
+end;
+if Style  if length(Style(:,1)) < nt Style=Style'; end;
+          for k=1:nt
+            if length(findstr(Style(k,1),'+o*.xsd^v<>ph')) % allow markers in linestyles
+                  set(Ret1(k),LINESTYLE,'none','marker',Style(k,1));
+            else  set(Ret1(k),LINESTYLE,Style(k,:));  end;
+          end;
+end;
+if Marker if length(Marker(:,1)) < nt Marker=Marker'; end;
+          for k=1:nt set(Ret1(k),'marker',Marker(k,:)); end;
+end;
+for k=1:nt if DIStrace(k) set(Ret1(k),HIDE); end; end; % hide disabled traces
+
+Ret1a = ones(size(Ret1));        % will be line handles for main plot only
+axS = [];                        % collect handles of subplot axes
+p0 = [];                         % will be coordinates for OID0 (i.e left and right hand axes)
+sRat = [1 1];  ofS = [0 0 0 0];  % size ratio and offset for cursor positions due to OID -3
+if length(AXISp)
+  kAX0 = find(~AXISp(:,1));      % is there a row for OID zero?
+  kAX3 = find(AXISp(:,1) == -3); % is there a row for OID -3?
+  kAX  = [kAX0 kAX3];
+  if length(kAX) p0 = AXISp(kAX(1),2:5);  % yes, grab coordinates from xy parameter
+                 AXISp(kAX,:) = [];       % remove these rows from the xy parameter
+  end;
+end;
+if length(p0) % use specified position from the xy parameter
+  if length(kAX3)
+                  % p00 = p0
+                  % posAXAX = posAX
+                  sRat = imag(p0(3:4));  p0 = real(p0);
+                  if ~sRat(1) sRat(1) = p0(3); end;
+                  if ~sRat(2) sRat(2) = p0(4); end;
+                  sRat = sRat ./ posAX(3:4);
+                  ofS = [p0(1:2) - sRat .* posAX(1:2) 0 0];
+                  % p0i = imag(p0(3:4));  p0 = real(p0);
+                  % sRat = p0(3:4) ./ posAX(3:4);
+                  % if p0i(1) sRat(1) = max(sRat(1),p0i(1)); end; % imag part specifies minimum width size ratio
+                  % if p0i(2) sRat(2) = max(sRat(2),p0i(2)); end; % imag part specifies minimum height size ratio
+                  % ofS = [p0(1:2)-posAX(1:2).*sRat 0 0];
+  end;
+  posAX = p0; axisPOS = 1;
+end;
+ 
+sRat2 = [sRat sRat];  sRat62 = repmat(sRat2,6,1);  ofS61 = repmat(ofS,6,1);
+if ~nSP posAX = posAX .* axisPOS;                          % no subplots. Apply axisPOS corrections to default axis position
+        CXL = [.1386 .007 .02 .041];  C1X = [.1643 .006 .10 .045];  C2X = [.2686 .006 .10 .045];
+        CYL = [.7609 .007 .02 .041];  C1Y = [.7865 .006 .10 .045];  C2Y = [.8908 .006 .10 .045];
+        posC{1} = [CXL;CYL;C1X;C2X;C1Y;C2Y] .* sRat62 + ofS61; % cursor edit box locations (no subplots)
+else    % cursor object positioning for subplots is different
+  yex = .027 - (indep>0)*.01; % subplot cursors take this much extra vertical space
+  xStart = posAX(1);
+  yStart = posAX(2) + yex;
+  hSpace = posAX(3);
+  vSpace = posAX(4) - yex;
+  SPx = xStart + SPx * hSpace;                   % convert SPx to figure coordinates
+  dx = posFIG(3);  dx1 = 64/dx;  dx2 = 14/dx;  dx3 = 67/dx;  dx4 = 19/dx;
+  dy = posFIG(4);  dy1 = 20/dy;  dy2 = 24/dy;  y1a = .0076;  y2a = y1a + dy2;
+  p2 = 0;  
+  for j = 1:nC
+    p1 = p2+1;  p2=p1+npC(j)-1;                  % first and last indices into SubPlot for this column
+    dy = SPdy(p1:p2);                            % inter-plot vertical spacing
+    h = SubPlot(p1:p2) - (sum(dy) - dw)/npC(j);  % reduce plot heights to account for vertical spacing
+    y = cumsum(dy + [0 h(1:end-1)]) - dw;        % y location of bottom edge of each plot (relative to plot area)
+    ySP{j} = yStart + vSpace*y;                  % y location of bottom edge of each plot (relative to figure)
+    hSP{j} = h*vSpace;                           % height of each plot for this column 
+    if j==1 posAX = [SPx(1) ySP{1}(1) hSpace*SPw(1) hSP{1}(1)]; end; % position of main left axis
+    x2 = SPx(j);   dx30 = [dx3 0 0 0];  dx40 = [dx4 0 dx1-dx2 0];
+    wj = SPw(j)*posFIG(3);                       % width in pixels for this column
+    dxy = dx30;                                  % offset between the cursor edit box & delta cursor edit box
+    if (indep>0) | (length(y)==1 & wj>220)
+         x3 = 1.3*dx3;  
+         if length(y)==1 & wj>360 dxy = dx30;        x3 = min(4*x3,SPw(j)-x3-dx3);
+         else                     dxy = [0 dy2 0 0]; x3 = min(4*x3,max(SPw(j)-x3,x3));
+         end;
+         C1X = [x2 y1a dx1 dy1];   C1Y = C1X + [x3 0 0 0];
+    else C1X = [x2 y2a dx1 dy1];   C1Y = [x2 y1a dx1 dy1];
+    end;
+    posC{j} = [C1X-dx40; C1Y-dx40; C1X; C1X+dxy; C1Y; C1Y+dxy] .* sRat62 + ofS61;;
+    
+    for k=p1:p2                       % create the subplot axes -----------
+      if k==p1 & j==1 continue; end;  % skip creation of main axis (It's already been created)
+      l = nt+k-nSP;  Ret1a(l) = 0;    % Remove the line from Ret1a
+      l = Ret1(l);                    % line for this subplot
+      if isempty(SubTrace) c = get(l,COLOR); else c = cXYax; end;
+      a = axes(YCOLOR,c,XCOLOR,c);    % create subplot axis
+      setappdata(a,'Lhandles',l);
+      if length(SubTrace) setappdata(a,'subTr',1); end; % disable cursor ylim adjust
+      set(l,PARENT,a);                % move line to this axis
+      if indep>0 x = get(l,XDATA);  x = [x(:); 0; 0;]; x = x([1 end]);
+                 if diff(x)>0 set(a,XLIM,x); end; % set correct x-limits
+      end;
+      if length(LabelY)>=k ylabel(LabelY{k}); end;
+      if k==p1 & j>1 if length(LabelX)>=j xlabel(LabelX{j}); else xlabel('X axis'); end; end;
+      axS = [axS a];
+    end;
+  end;
+end;  % end if ~nSP
+
+set(AXrl,POS,posAX,'Xscale',Xscale,'Yscale',Yscale);
+if ischar(Ylim)
+   Ylim = get(AX,YLIM);
+end;
+Ret1a = Ret1(logical(Ret1a));
+setappdata(AX,'Lhandles',Ret1a);  % includes line handles for both left & right MAIN axis (lower left)
+axData = [AX axS AXr];            % append right hand axes at the end of the axis appdata
+AppLh = Ret1;                     % includes all line handles (same as Ret1a if no subplots)
+AppAx = axData;
+if exFig
+  AppLh = [getappdata(FIG,'Lhandles'); AppLh];
+  AppAx = [getappdata(FIG,'axis') AppAx];
+end;
+setappdata(FIG,'Lhandles',AppLh); 
+setappdata(FIG,'axis',AppAx);
+
+% initialize main cursor objects
+pb = [posPEAK;posVALY;posM;posDEL];
+if Xslide % if xslider is eabled, move other buttons & menubox up to make room
+   posBox(2) = posBox(2) + .028;  pb(:,2) = pb(:,2) + .028;  pb = [pb; posSLDR];
+end;
+pbr = size(pb,1);  pb = pb .* repmat(sRat2,pbr,1) + repmat(ofS,pbr,1);
+CurID = plt('cursor',AXrl,'init',[posC{1};pb],curclr,'', mrk, CmarkSZ*fontsz,'','on',[],axisCB);
+set(findobj(gcf,'style','push',STR,'D'),USER,cDEFAULT,TAG,cFileS); % save colors file name in Delta button
+CurIDstr  = {@plt 'cursor' CurID};
+if indep CurIDstr0 = {@plt 'cursor' 0}; else CurIDstr0 = CurIDstr; end;
+set(AXrl,USER,CurID);
+Left = setdiff(1:nt-nSPm,Right);  % Traces on left main axis
+nLeft = length(Left);             % number of traces on the left main axis
+if (length(AXr) | nSP) & nLeft==1
+  yclr = cTRACE(mod(Left-1,ndc)+1,:); leftclr=yclr;  % match trace color when only 1 trace is on the left side
+else yclr = cXYax;  leftclr = cXYlbl;
+end;
+set(AX,XCOLOR,cXYax,YCOLOR,yclr);
+xlimm = Xlim{1};
+if ischar(xlimm)
+  if nLeft xlimm = get(AX,XLIM); else xlimm = get(AXr,XLIM); end;
+end;
+[prefix xmult] = plt('metricp',max(abs((xlimm))));             % compute metric prefix
+if ENApre(1) & xmult~=1
+  for k=1:nt set(Ret1(k),XDATA,xmult*get(Ret1(k),XDATA)); end; % apply data multiplier
+  LabelX{1} = [prefix LabelX{1}];                              % apply prefix to X label
+else xmult = 1;
+end;
+set(AXrl,XLIM,xlimm*xmult);
+[prefix mult] = plt('metricp',max(abs((Ylim))));               % compute metric prefix
+ymult = ones(1,nt);                     % will be y multiplier for each trace
+if ENApre(2) & mult~=1
+  for k=1:nLeft
+     kk = Ret1(Left(k));
+     set(kk,YDATA,mult*get(kk,YDATA));  % apply data multiplier only to left axis
+     ymult(Left(k)) = mult;
+  end;
+  LabelY{1} = [prefix LabelY{1}];       % apply prefix to Y label
+else mult = 1;
+end;
+set(AX,YLIM,Ylim*mult);
+if ~exFig setappdata(FIG,'xymult',[xmult ymult]); end; % save for use by plt save/open
+xlabel(LabelX{1},COLOR,cXYlbl,HANDLEvis);
+hYlab = ylabel(LabelY{1},COLOR,leftclr,HANDLEvis);
+plt('cursor',CurID,'moveCB2',[CurIDstr {'MVcur'}]);
+if ~cGRIDs & sum(cPLTbk)>1.5 & (~MverE | isempty(AXr)) cGRID = 1-cGRID; end;
+plt('grid',AX,'init',cGRID,GridEr,GridSty);
+if Grid(2)=='f' plt('grid',AX,'off'); end;
+axes(POS,posC{1}(2,:)+[0 0 .2 0],HIDE); % axis to contain cursor id text
+text(-.02,.45,'',FONTSIZE,fontsz,RIGHTalgn,MOUSE,'plt click RMS;',USER,AX);
+if length(Xstring)                      % X auxiliary string
+  if ischar(Xstring) & Xstring(1) == '?'
+        Xstring(1)=[];                  % Use edit box (instead of text object) if 1st character is "?"
+        a = EDIT(NORMAL,POS,posC{1}(4,:).*[1 1 1.7 1],CENTERalgn,...
+                 BACKGROUND,[.2 .2 .2],FOREGROUND,[1 1 .3]);
+  else  a = text(-2.22,.45,'',COLOR,cXYlbl);
+  end;
+  set(a,FONTSIZE,fontsz,TAG,'xstr');
+  setappdata(a,'evl',Xstring);
+  setappdata(AX,'xstr',a);       % save handle of xstring
+  uistack(a,'bottom');
+end;
+if length(Ystring)     % Y auxiliary string
+  if ischar(Ystring) & Ystring(1) == '?'
+        Ystring(1)=[]; % Use edit box (instead of text object) if 1st character is "?"
+        a = EDIT(NORMAL,POS,posC{1}(6,:),CENTERalgn,...
+                 BACKGROUND,[.2 .2 .2],FOREGROUND,[1 1 .3]);
+  else  a = text(.6,.45,'',COLOR,cXYlbl);
+  end;
+  set(a,FONTSIZE,fontsz,TAG,'ystr');
+  setappdata(a,'evl',Ystring);
+  setappdata(AX,'ystr',a);       % save handle of ystring
+  uistack(a,'bottom');
+end;
+nMenu = sum(MenuBox);  % number of menu box items enabled
+aid = -1;
+%%%%%%%%%%%%%%%%%ahi = .035*nMenu;
+ahi = .035*nMenu;
+if nID>1 & TRACEid
+  h = 19*ntid;         % height of TraceID axis  (pixels)
+  ahip = ahi * 525;    % height of MenuBox axis  (pixels)
+  hr = 440 / (h+ahip); % shrink factor (space available/space used)
+  if hr<1 ahi = ahi*hr;  h = h*hr;  end;  % shrink only if required
+  aidp = sRat2 .* idPOS.*[3 521-h 50 h]./[700 525 700 525] + ofS;
+  aid = axes(XLIM,[0 ncol],YLIM,[-ntid 0]-.5,COLOR,cTID,XCOLOR,cPLTbk,YCOLOR,cPLTbk,NOTICK,isTraceID,...
+        NORMAL,POS,aidp,MOUSE,'plt misc tidmv;'); % Position trace ID 4 pixels from the top
+  setappdata(aid,'TIDcback',TIDcback);
+  setappdata(aid,'ty',' xy');
+  setappdata(aid,'cid',CurID);
+  cRid = cPLTbk + .16*(2*(cPLTbk<.5)-1); % right axes indicator, up/down by .16 for each rgb
+  row = 1;  col = 1;                     % start in upper left corner of TraceID box
+  bln = 0;                               % count blank traceIDs
+  lpl = {COLOR; 'marker'; LINESTYLE; 'linewidth'};  % line properties for legend
+  [tn tw] = size(TRACEid);
+  if nID>tn TRACEid = [TRACEid; repmat(' ',nID-tn,tw)]; end;
+  enap = 1;                              % enable patches to identify right hand axis
+  wmax = 0;
+  Cpch = cFIGbk;  if max(Cpch)>.24 Cpch = Cpch*.9; else Cpch = Cpch*1.1; end;
+  pch = [];                              % save TraceID patches here
+  for k=1:nID
+    s = TRACEid(k,:);
+    wmax = max(wmax,length(s));          % max length of TraceIDs
+    if s(1)==']' s = s(2:end); enap = 0; end;
+    isR = length(find(k==Right));        % true if this trace is on the right hand axis
+    if isR & enap cR=cRid; line(col-[1 .05],[0 0]-row,COLOR,cR,'LineWidth',9);
+    else          cR=cPLTbk;
+    end;
+    allb = all(s == ' ');  bln = bln + allb;  % count blank traceIDs
+    arow = 999*allb - row;                    % position blank traceIDs off the screen
+    d = text(col-.93,arow,s);                 % create traceID text object
+    ms = {@plt 'click' [Ret1(k) d]};
+    set(d,FONTSIZE,fontsz,BOLD,COLOR,cTRACE(mod(k-1,ndc)+1,:),MOUSE,ms);
+    setappdata(d,'ty','-');
+    if TRACEmk
+      mk = line(TRACEmk+col-1,arow+TRACEmk*0,lpl,get(Ret1(k),lpl),MOUSE,ms); % copy line properties to legend
+      setappdata(d,'mk',mk); % save traceID line handles in traceID text object
+      if TRACEmk(1)<.25 set(d,COLOR,cR); end; % no room for the traceIDs. Make them invisible.
+    else mk = [];
+    end;
+    if npch(k) % create patches for pltt
+      pch = [pch patch([col-1 col col col-1],.5-row-[0 0 1 1],Cpch,'edgec',Cpch,'user',{k Ret1(k) d})];
+      set(d,HIDE);  if length(mk) set(mk,HIDE); end;
+    end;
+    if DIStrace(k) set(d,ITALIC,BOLDnot); set(mk,lpl,{[0 .3 .3] 'none' '-' 9}); end;
+    if ~allb row = row+1; end;
+    if row>TIDcolumn(col) col=col+1; row=1; end; % advance to the top of the next column
+  end;
+  if length(pch) setappdata(gcf,'pch',pch); end;
+  if bln & ncol==1
+     dy = aidp(4) * (1 - (nID-bln)/nID);
+     aidp = aidp + [0 dy 0 -dy];
+     set(aid,YLIM,[bln-nID 0]-.5,POS,aidp);
+  end;
+  if wmax>6 & ncol==1         % expand TraceID box slightly if skinner than 55 pixels and
+    if aidp(3)*posFIG(3) < 55 %  the longest TraceID is more than 6 characters
+       aidp(3) = aidp(3)*1.13; set(aid,POS,aidp);
+    end;
+  end;
+end;
+if nMenu % create Menu Box
+  posBox(4) = ahi;
+  if exFig cFIGbk = get(gcf,COLOR); end;  c = .2*cXYax + .8*cFIGbk;
+  cb = sum(cXYlbl)<1.5;  cb = .75*cFIGbk + .25*[cb cb cb];
+  ambv = .55;  if MverE ambv = .45; end;                   % vertical offset slightly different for R2014a or later
+  posBox = posBox .* sRat2 + ofS;                          % adjust for xy OID -3
+  pixLW = posBox([1 3])*posFIG(3);  pixE = 40 - pixLW(2);  % don't allow MenuBox to be narrower than 40 pixels
+  if pixE>0 pixLW = pixLW + [-pixE pixE];
+            pixLW = pixLW + [max(5-pixLW(1),0) 0];         % don't allow MenuBox left edge to be less than 5 pixels
+            posBox([1 3]) = pixLW/posFIG(3);
+  end;
+  amb = axes(NORMAL,POS,posBox,YLIM,[-nMenu 0]-ambv,'Box','On','XaxisLoc','top',...
+           COLOR,cb,XCOLOR,c,YCOLOR,c,NOTICK,TAG,'MenuBox',MOUSE,'plt misc tidmv;');
+  setappdata(amb,'cid',CurID);
+  % setappdata(amb,'ty',' xy');
+  b=0;  t=[];
+  zout = [CurIDstr0 {'ZoomOut'}];  mark = [CurIDstr0 {'mark'}];
+  logx = [CurIDstr0 {'TGLlogx'}];  logy = [CurIDstr0 {'TGLlogy'}];
+  rot  = [CurIDstr0 {'scale' 'old'}]; % XYr: cycle thru exp. history
+  txx = { 'Help',    Xsc,  Ysc,  'Grid',    'Print',   'Menu',    'Mark', 'Zout', 'XY\leftrightarrow'};
+  btn = { CLICKhelp; logx; logy; CLICKgrid; CLICKhcpy; CLICKmenu;  mark;   zout;   rot };
+  for k=1:length(MenuBox)
+    if MenuBox(k)
+       b=b-1;  te = text(.5,b,txx{k},'interp','tex');
+       t = [t te];  set(te,MOUSE,btn{k});  setappdata(te,'ty','-');
+       if k==1 set(te,USER,HelpFile,TAG,HelpFileR); end;
+    end;
+  end;
+  set(t,FONTSIZE,fontsz,COLOR,cXYlbl,CENTERalgn);
+else amb = [];
+end;
+if posFIG(1)<0 posFIG = abs(posFIG);     % use negative to prohibit autoshift
+else for k=flipud(findobj('type','fig'))' % autoshift if another figure is in the same place
+      if get(k,POS)==posFIG  posFIG = posFIG + [30 25 0 0]; end;
+     end;
+end;
+set(FIG,TAG,sprintf('%d',FIGt),'CloseReq','plt misc close;');
+if exFig
+     Mbar = length(get(FIG,'menu')) ~= 4; % is the menubar on?
+     if Mbar
+       plt('click','TGLmenu');  % if yes, toggle off, then on (to add plt menu)
+     end;      
+else set(FIG,POS,posFIG,'Name',FigName,COLOR,cFIGbk);
+end;
+if ~exFig | length(ucreq) setappdata(FIG,'ucreq',ucreq); end;  % save user close request function
+if Mbar plt('click','TGLmenu'); end;
+set(AX,aLp,aLv);                     % apply saved properties from arg list (left axis)
+set(get(AX,YLABEL),lLp,lLv);         % apply saved properties from arg list (left y label)
+set(get(AX,XLABEL),lXp,lXv);         % apply saved properties from arg list (x label)
+set(get(AX,'title'),TIp,TIv);        % apply saved properties from arg list (title)
+if length(AXr) set(AXr,aRp,aRv);     % apply saved properties from arg list (right axis)
+       set(get(AXr,YLABEL),lRp,lRv); % apply saved properties from arg list (right y label)
+end;
+v = 'off';
+for k=1:nLeft
+  if strcmp(get(Ret1(Left(k)),VISIBLE),'on') v = 'on'; break; end;
+end;
+set(hYlab,VISIBLE,v,UICONTEXT,uicontextmenu(CALLBK,'plt hideCur;'));
+leftC = cPLTbk; % background for main (left) axis - assuming no right hand axis
+CurMain = getappdata(0,'CurMain');
+Hc = get(CurMain(CurID),USER);
+if length(AXr)
+  ls = Ret1(Right)'; % traces for right hand axis
+  icr = icurbase+Right;  icg = find(icr>length(Hc));
+  if length(icg)
+    if length(SubTrace) icr(icg) = [];
+    else disp('Error: Subplot data must follow all main plot data in the argument list'); return;
+    end;
+  end;
+  set(Hc(icr),PARENT,AXr,ERAS,ERAXOR); % associate cursors with the right axis.
+  v = 'off'; gridXOR = cPLTbk;
+  for k=1:length(ls)
+    if strcmp(get(ls(k),VISIBLE),'on')
+       v = 'on';       % turn on right hand axis
+       leftC = 'none'; % make left hand axis transparent so right hand traces become visible
+       gridXOR = get(gcf,COLOR);
+       break;
+    end;
+  end;
+  set(AXr,VISIBLE,v);
+  if GridEr(1)=='x'    % for grid exclusive or mode
+    set(findobj(AX,isGRID),COLOR,bitxor(round(255*cGRID),round(255*gridXOR))/255);
+  end;
+end;
+plt('cursor',CurID,'MVcur');
+if length(moveCB) plt('cursor',CurID,'moveCB',moveCB); end;
+set(AX,COLOR,leftC);
+axes(AX);
+if     NoCursor   plt('hideCur');                                          % hide cursor objects if requested
+elseif ~BtnGroup  cobj = plt('cursor',CurID,'obj');  set(cobj(7:10),HIDE); % hide cursor button group
+end;
+cidS = CurID;          % collect cursor IDs
+cidB = CurID;          % cursors to be centered (bottom row of plots)
+if nSP
+  if ishandle(aid) & all(idPOS([1 2 4]) == [1 1 1])
+    set(aid,NORMAL);   % here if TraceID box position is defaulted
+    ysp1 = ySP{1};
+    if length(ysp1)>1
+      p = get(aid,POS);
+      p(2) = ysp1(2)-p(4)-.025;
+      if nMenu & (p(2) < sum(posBox([2 4]))+.015) % swap menu & TraceID box positions if they are overlapping
+         p(2) = posBox(2) + .025;  posBox(2) = p(2) + p(4) + .02;
+         set(amb,POS,posBox);
+      end;
+      set(aid,POS,p);
+    end;
+  end;
+  h = plt('cursor',CurID,'obj');           % get handles of cursor objects
+  q = [-1 .1 .1 .1];  u = [q;q;q;q];       % location for unneeded cursor objects (out of view)
+  py1 = get(h(5),POS);   p1 = [u;py1;u;q]; % cursor left locations
+  p = {POS  COLOR 'Xscale' 'FontSize' 'TickLength' 'Box' XLIM};
+  if indep>0 p(end) = []; end;             % don't set xlim in independent mode
+  v = get(AX,p);                           % get axis properties
+  if ischar(v{2}) v{2} = get(AXr,COLOR); end;
+
+  ak = 1;                                  % index into axS
+  for j = 1:nC
+    r = [posC{j}; u];                      % cursor object positions for this column
+    v{1}([1 3]) = [SPx(j) hSpace*SPw(j)];  % axis positions for this column
+    if j>1 & indep<0
+      if length(Xlim)>=j xlimm = Xlim{j}; else xlimm = 'default'; end;
+      if ischar(xlimm) x = get(findobj(axS(ak),'type','line'),XDATA);   % if xlim is defaulted
+                       xlimm = [min(x) max(x)];
+      end;
+      v{end} = xlimm;
+    end;
+    npj = npC(j);
+    for k = 1:npj                             % loop thru each axis for this column
+      if j+k > 2                              % skip main axis since the cursor has already been initialized
+        v{1}([2 4]) = [ySP{j}(k) hSP{j}(k)];  % vertical position for each axis of this column
+        axk = axS(ak);  set(axk,p,v);
+        cidN = plt('cursor',axk,'init',r,'','','+',8);      % create next cursor
+        set(axk,USER,cidN);   cidS = [cidS cidN];           % save cid in user data and cidS array
+        if NoCursor plt('hideCur'); end;                    % hide cursor objects if requested
+        if indep<0
+          CurMain = getappdata(0,'CurMain');  Hd = get(CurMain(cidN),USER);
+          set(Hd(iyro),MOUSE,'plt click EDIT 2;');          % y edit box right click (edit popup)
+          if k==1  cidB = [cidB cidN];                      % here if bottom of column
+                   set(Hd(ixro),MOUSE,'plt click EDIT 1;'); % x edit box right click (re-enter edit mode)
+          else     set(axk,'XtickLabel',[]);                % not the bottom axis of the column
+          end;
+        end;
+        ak = ak+1;
+      end;
+      r(5,1) = r(5,1) + dx3 * (indep<0);
+      if k==1 r([1 2 4 6],:) = u;          % all objects 1st time thru. Only need x&y edit boxes for the rest
+              if indep<0 r(3,:) = q; end;  % if linked, we also don't need the x edit box
+      end;
+      if indep>0 & npj>1
+        if j+k>2 ci=cidN; else ci=CurID; end;
+        plt('cursor',ci,'moveCB2',sprintf('plt("misc","icur",%d);',ci));
+      end;
+    end;
+    uistack(Hc(ixexp),'top'); uistack(Hc(iyexp),'top'); % make delta cursors edit boxes visible for main cursor
+  end;
+  s = 'plt("cursor",';
+  cidSS = {[s int2str(cidS(1))]};
+  for k=2:nSP
+    SS = [s int2str(cidS(k))];
+    cidSS = [cidSS {SS}];
+    plt('grid',axData(k),'init',cGRID,GridEr,GridSty);
+    if Grid(2)=='f' plt('grid',axData(k),'off'); end;
+  end;
+  n = length(SubTrace);   m = length(Ret1);  a = length(axData);
+  if n == a   % Process SubTrace argument if supplied
+    h = 1;
+    for k = 1:n
+       h2 = h + SubTrace(k) - 1;
+       if h2 > m break; end;
+       set(Ret1(h:h2),'parent',axData(k));
+       h = h2 + 1;
+    end;
+  elseif n == m
+    for k=1:n
+      if SubTrace(k) <= a  set(Ret1(k),'parent',axData(SubTrace(k))); end;
+    end;
+  end;
+
+  set(findobj(FIG,MOUSE,'plt click RMS;'),HIDE); % don't use idcur with subplots. (Now we can userp moveCB2!)
+  if indep<0
+    setappdata(FIG,'c',0);
+    s1a = 'if getappdata(gcf,"c")==%d setappdata(gcf,"c",0); else setappdata(gcf,"c",getappdata(gcf,"c")+1);';
+    s2 = ',"update",plt2nd({"cursor",%d,"get"})); end';
+    s3 = ',"xlim",get(gca,"xlim")); end';
+    p2 = 0;  
+    for j = 1:nC
+      p1 = p2+1;  p2=p1+npC(j)-1;   % first and last indices into SubPlot for this column
+      s1 = sprintf(s1a,npC(j));
+      for k = p1:p2
+        if k==p2 m=p1; else m=k+1; end;  % wrap around (cursor n moves cursor 1)
+        CI = cidS(k);
+        plt('cursor',CI,'moveCB2',[s1 cidSS{m} sprintf(s2,CI)]); % cursor 1 moves cursor 2, etc.
+        plt('cursor',CI,'axisCB',[s1 cidSS{m} s3]); % axis 1 also sets axis 2, etc.
+      end;
+    end;
+  end;  % end if indep<0
+end; % end if nSP
+
+AppC = cidS;  if exFig  AppC = [getappdata(FIG,'cid') AppC]; end;
+setappdata(FIG,'cid',AppC);
+if Grid(2)=='n' plt('grid',AX); end; % update grid lines if Grid is 'on'
+axes(AX);
+% bug in Matlab ver 2009b causes the figure to become visible after this command
+set(gcf,HIDE); % bug workaround
+
+setappdata(FIG,'axi',getappdata(FIG,'axis'));
+
+if exFig
+  uic = getappdata(FIG,'uic');
+  txt = getappdata(FIG,'txt');
+  for k = findobj(FIG,'type','uicontrol')';
+    if isempty(getappdata(k,'ty')) setappdata(k,'ty',' xy'); uic = [uic k]; end;
+  end;
+  for k = findobj(FIG,'type','text')';
+    if isempty(getappdata(k,'ty')) setappdata(k,'ty',' xy'); txt = [txt k]; end;
+  end;
+else
+  uic = findobj(FIG,'type','uicontrol')';
+  txt = findobj(FIG,'type','text')';
+  setappdata(FIG,'epopup',plt('pop','choices', ...  % create y-edit popup
+  {'Properties';           'multiCursor';             'xView slider';  ...
+       'Cancel';                                                       ...
+        'Range';  'Range\leftrightarrow';  'Range\uparrow\downarrow';  ...
+       'Modify'; 'Modify\leftrightarrow'; 'Modify\uparrow\downarrow'}, ...
+      'interp','tex','visible','off','callbk',CLICKyedit));
+
+  setappdata(FIG,'Dedit',{cidS(1) 4 -1 43 8 .5 0 -1 1});
+  setappdata(FIG,'NewData',0);
+  setappdata(FIG,'EditCur',(196-get(0,'screenpix'))/10); % default edit cursor size
+  setappdata(FIG,'logTR',1e6);                           % default log tick range
+  setappdata(FIG,'snap',[100 100]);                      % default SnapTo res
+  for k = [uic txt]  setappdata(k,'ty',' xy'); end; % objects that can be moved via the xy parameter
+end;
+for k = [axData amb] setappdata(k,'ty',' xy'); end; % objects that can be moved via the xy parameter
+setappdata(FIG,'uic',uic);
+for k = findobj(txt,'str','','vis','off')'  txt(find(txt==k)) = []; end; % remove hidden empty strings (for Matlab 6)
+setappdata(FIG,'txt',txt);
+txtp = [];  np = 0;
+for p = AXISp'
+  m = p(1);  p = p(2:5);
+  switch m
+    case -2,   if nMenu set(amb,POS,p); end;
+    case -1,   if ishandle(aid) set(aid,POS,p); end;
+    otherwise, if     m<=length(axData)          set(axData(m),POS,p);
+               elseif m>201 & m-200<=length(uic) set(uic(m-200),POS,p);
+               elseif m>300 & m-300<=length(txt) np=np+1; txtp{np} = [m-300; p(1:2)];
+               end;
+  end;
+end;
+
+if LineSmooth & Mver>=7 & exist('isprop') & isprop(Ret1(1),'LineSmoothing') % protect against older Matlab versions
+  a = get(Ret1(1),'LineSmoothing');
+  if a(2)=='f' set(Ret1,'LineSmoothing','on'); end;  % set LineSmoothing property on if it wasn't already
+end;
+set(findobj(gcf,STR,'O'),USER,LineSmooth);
+plt('misc','tidtop');                        % put the TraceID axis on top
+axes(AX);
+if indep>0 ci=cidS; else ci=cidB; end;
+for k=ci plt('cursor',k,'update',-1); end;   % initialize cursor position to middle of plot
+if xViewOpt     plt('click','Yedit',3); end; % enable xView slider
+if multiCurOpt  plt('click','Yedit',2); end; % enable multiCursor
+if helpT plt('helptext','on'); end;          % create help text if defined
+if FigShow set(FIG,SHOW); drawnow;
+else       set(gcf,HIDE);                    % shouldn't need this (bug workaround)
+end;
+for k=1:np p=txtp{k}; set(txt(p(1)),NORMAL,POS,p(2:3)); end;
+% end function pltinit
+
+
+function r2 = plt2nd(v) % returns the second plt output argument
+  [r1 r2] = plt(v{:});
+%end function plt2nd
+
+function s = stripp(c)      % strip path & extension (needed only for Matlab 6.1)
+  k = findstr(c,filesep);   % later versions will not include the path or extension
+  if length(k) s = c(k(end)+1:end-2); else s = c; end;
+% end function stripp
+
+function c = ctrip(v)                       % converts alternate form color triples to standard form
+  if ischar(v) c = v;  return; end;         % allow forms such as ['red '; 'blue'] and ('rbk')'
+  [s1 s2] = size(v);
+  if s1>1 c = [];                           % here if more than one color is specified
+          for k = 1:s1  c = [c; ctrip(v(k,:))]; end;
+          return;
+  end;
+  if s2==3
+       if max(v)>1 c = v/100; else c = v; end;  % If it's too big, divide by 100
+  else v1 = floor(v/10000);  v = v - 10000*v1;  % handle rrggbb decimal form
+       v2 = floor(v/100);    v = round(v - 100*v2);
+       c = [v1 v2 v];
+       c(find(c==1))=100;
+       c = c/100;
+  end;
+% end function ctrip

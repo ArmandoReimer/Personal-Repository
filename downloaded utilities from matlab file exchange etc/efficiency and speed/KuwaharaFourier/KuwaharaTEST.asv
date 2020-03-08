@@ -1,0 +1,110 @@
+clc;
+clear all; 
+close all; 
+I = double(imread('moon.tif'));
+I = double(imread('peppers.png'));
+figure;
+subplot(1,2,1); imagesc(uint8(I));  axis equal tight; % colormap gray;
+
+
+% Small filter
+kSize =6+1;
+
+tic; K3 = KuwaharaFourier3D(I,kSize); t3 = toc
+
+K3 = uint8(round(255*(K3-min(K3(:)))/(max(K3(:)) - min(K3(:)))));
+
+% imagesc(I);  axis equal tight; % colormap gray; 
+
+subplot(1,2,2);  imagesc(uint8(K3));  axis equal tight; % colormap gray;
+
+return
+
+%%
+K3 = uint8(I);
+
+
+%%
+figure; 
+imagesc([K3(:,:,N/2+1),squeeze(K3(:,N/2+1,:))]);  axis equal tight; colormap gray; 
+
+%%
+N = 16;
+IM_3D = zeros(16,16,16);
+IM_3D(7:11,7:11,7:11) = 1;
+IM_3D(9:11,9:10,7:9) = 2;
+IM_3D(9:10,11:12,9:10) = -2;
+
+IM_3Dnoise = IM_3D + 1/5*randn(size(IM_3D));
+
+kSize = 2+1;
+tic; K3  = round(KuwaharaFourier3D(IM_3Dnoise,kSize)); t3 = toc;
+
+figure; 
+imagesc([...
+    IM_3D(:,:,N/2+1),squeeze(IM_3D(:,N/2+1,:));...
+    IM_3Dnoise(:,:,N/2+1),squeeze(IM_3Dnoise(:,N/2+1,:));...
+    K3(:,:,N/2+1),squeeze(K3(:,N/2+1,:))]);  axis equal tight; colormap gray; 
+
+
+
+return 
+
+
+
+
+
+
+
+
+
+%% Test 2D  
+I = repmat(I, 1*[1,1]);
+
+% Small filter
+kSize = 2*4+1;
+
+
+tic; K1 = KuwaharaFast(I,(kSize-1)/4);  t1 = toc
+tic; K2 = Kuwahara(I,kSize);  t2 = toc
+tic; K3 = KuwaharaFourier3D(I,kSize); t3 = toc
+A1 = K1;
+figure; 
+imagesc([I, K1,K2,K3;I, I-K1,I-K2,I-K3]); 
+axis equal tight; colormap gray; 
+title(['Original image, ', ...
+    '          (', num2str(round(t1*100)/100), ' sec). '..., 
+    '          (', num2str(round(t2*100)/100), ' sec). '..., 
+    '          (', num2str(round(t3*100)/100), ' sec). '..., 
+    ]);
+set(gca,'xcolor','w','ycolor','w','xtick',[],'ytick',[])
+set(gcf,'color','w')
+set(gca,'box','off')
+
+
+% Large filter:  
+kSize = 13*4+1;
+
+
+tic; K1 = KuwaharaFast(I,(kSize-1)/4);  t1 = toc
+tic; K2 = Kuwahara(I,kSize);  t2 = toc
+tic; K3 = KuwaharaFourier3D(I,kSize); t3 = toc
+
+figure; 
+imagesc([I, K1,K2,K3;I, I-K1,I-K2,I-K3]); 
+axis equal tight; colormap gray; 
+title(['Original image, ', ...
+    '          (', num2str(round(t1*100)/100), ' sec). '..., 
+    '          (', num2str(round(t2*100)/100), ' sec). '..., 
+    '          (', num2str(round(t3*100)/100), ' sec). '..., 
+    ]);
+set(gca,'xcolor','w','ycolor','w','xtick',[],'ytick',[])
+set(gcf,'color','w')
+set(gca,'box','off')
+
+
+figure; imagesc([I, A1, K1]); 
+axis equal tight; colormap gray; 
+set(gca,'xcolor','w','ycolor','w','xtick',[],'ytick',[])
+set(gcf,'color','w')
+set(gca,'box','off')

@@ -1,0 +1,82 @@
+function filtered = KuwaharaFourier(original,winsize)
+%% Incorrect input handling
+error(nargchk(2, 2, nargin, 'struct'));
+% non-double data will be cast
+if ~isa(original, 'double')
+    original = double(original);
+end % if
+% wrong-sized kernel is an error
+if mod(winsize,2)~=1
+    error([mfilename ':IncorrectWindowSize'],'winsize must be odd');
+end % if
+%% Build the square convolution kernel
+N_or            = size(original); 
+Dimensionality  = length(N_or);        
+Nsquare         = (winsize+1)/2;
+Nkernel         = repmat(Nsquare, [1, Dimensionality]); 
+Nrem            = winsize - Nsquare;
+squareKernel    = 1/Nsquare^Dimensionality*ones(Nkernel); 
+%% Convolution-wise calculation of averages and variances
+% NB: I have accelerated the convolution, by processing the averages and
+% the variances in a single convolution. This can be done by adding the 
+% squared image as a an imaginary passenger to the normal image.
+complexConvInput = original + 1i*original.^2; 
+% Convolute... 
+if prod(Nkernel) < 2^8  % This boundary could be improved 
+    % ... in the spatial domain for small kernels
+    complexConvOutput = convn(complexConvInput, squareKernel);
+else
+    % ... in the Fourier domain for larger kernels 
+    % NB: Zero-padding and ensuring equal size of image and kernel
+    complexConvInput = padarray(complexConvInput, Nkernel, 'post');  
+    squareKernel     = padarray(squareKernel    , N_or , 'post'); 
+    % Multiplication in frequency domain:  
+    complexConvOutput = ...
+        ifftn(fftn(complexConvInput).*fftn(squareKernel));
+end 
+
+% Separate the real and imaginary part: 
+    % Real part is the average: 
+    avgWhole = real(complexConvOutput); 
+    % imag part is the stds, however, the squared average must yet be 
+    % subtracted: 
+    stdWhole = imag(complexConvOutput)-avgWhole.^2;  
+
+    if Dimensionality == 2
+        % Patch the North-East side, North-West side, ... onto a stack: 
+        avgs = cat(3,...
+            avgWhole(Nrem+(1:N_or(1)), Nrem+(1:N_or(2))),...
+            avgWhole(Nrem+(1:N_or(1)),       1:N_or(2)) ,... 
+            avgWhole(      1:N_or(1) , Nrem+(1:N_or(2))),...
+            avgWhole(      1:N_or(1) ,       1:N_or(2))); 
+        stddevs = cat(3,...
+            stdWhole(Nrem+(1:N_or(1)), Nrem+(1:N_or(2))),...
+            stdWhole(Nrem+(1:N_or(1)),       1:N_or(2)) ,... 
+            stdWhole(      1:N_or(1) , Nrem+(1:N_or(2))),...
+            stdWhole(      1:N_or(1) ,       1:N_or(2))); 
+
+        %% Choice of the index with minimum variance
+        [minima,indices] = min(stddevs,[],3); %#ok<ASGLU>
+        %% Selecting the accompanying average value: 
+            [y,x] = meshgrid(1:N_or(2),1:N_or(1));
+            lookupIndices = x+size(original,1)*(y-1)+numel(original)*(indices-1);
+            filtered = avgs(lookupIndices);
+    else
+        % Pack the  
+        av_Min = min(avgWhole(:));
+        av_Max = max(avgWhole(:));
+        av_Rng = (max(avgWhole(:)) - averageMin)
+        normalizedAverages =   
+        complexPacking = stdWhole.*exp(1i*2*pi*(avgWhole - min(avgWhole(:)))/); 
+
+        for dim = 1:3
+            circShiftVector = zeros(1,3); 
+            circShiftVector(dim) = -Nrem; 
+
+            complexPacking = cat(4, ...
+                complexPacking, ...
+                circshift(complexPacking, circShiftVector)); 
+        end
+        filtered = mod(angle(min(complexPacking,[],4)),2*pi)*(rang_avgs/(2*pi)) + min_avgs; 
+    end
+end % of function

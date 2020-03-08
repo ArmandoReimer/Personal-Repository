@@ -1,0 +1,19 @@
+% examp1.m - demonstrates Matlab conditional compilation
+
+%include
+  modelA;     % change the "A" to a "B" or "C" for modelB or modelC
+%end_include
+
+ result1 = param1 * sin(param4 + param3);  % compute an intermediate result
+
+ result2 = sqrt(param2) + param5^3;        % compute another intermediate result
+
+IFmodelA finRes = 1/sqrt(result1 + result2);       % final result
+IFmodelB finRes = abs(result1) / round(result2);   % final result
+IFmodelC finRes = mod(result1,result2);            % final result
+
+IFmodelA disp('model A is pretty good');
+IFmodelB disp('model B is fantastic');
+IFmodelC disp('model C is out of this world');
+
+disp(sprintf('finRes = %g',finRes));  % display something important

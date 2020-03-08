@@ -1,0 +1,211 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- saved from url=(0081)file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Persistent Example</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-04-26"><meta name="DC.source" content="persistentExample.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Persistent Example</h1><!--introduction--><p>This example demonstrates how to use persistent variables when loading data in a function. Doing things this way guarantees that the "data" value in <tt>persistentFunction</tt> is only loaded or changed when necessary.</p><p>Note that, I have a hunch that MATLAB may actually recognize a function is called repeatedly loading a mat file when not using persistent. It may do a form of what "persistentFunction" does with not loading the mat file implicitly. If know for sure about this behavior, please inform me.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#1">persistentFunction Code</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#2">Prepare workspace and command line</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#3">call persistentFunction the first time</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#4">call persistentFunction again with the same value</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#5">call persistentFunction and change the value</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#6">call persistentFunction and change the value</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#7">call persistentFunction and change the value</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#8">call persistentFunction again with the same value</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#9">call persistentFunction with a bad input value</a></li><li><a href="file:///C:/Users/jnicholson/Desktop/persistentExample/html/persistentExample.html#10">call persistentFunction again with the same value that last worked</a></li></ul></div><h2 id="1">persistentFunction Code</h2><p>
+<pre class="codeinput"><span class="keyword">function</span> output = persistentFunction(input)
+<span class="comment">% persistentFunction loads data between calls and changes it when the input</span>
+<span class="comment">% changes.</span>
+
+<span class="keyword">persistent</span> data inputPrevious
+
+<span class="comment">% - Check if this is the first time the function is called.</span>
+<span class="comment">% - If it isn't the first time, check if the input has changed.</span>
+<span class="keyword">if</span> isempty(inputPrevious) || inputPrevious~=input
+    <span class="keyword">switch</span> input
+        <span class="keyword">case</span> 1
+            fprintf(<span class="string">'file1.mat loaded.\n'</span>);
+            d = load(<span class="string">'file1.mat'</span>);
+            data = d.c;
+        <span class="keyword">case</span> 2
+            fprintf(<span class="string">'file2.mat loaded.\n'</span>);
+            d = load(<span class="string">'file2.mat'</span>);
+            data = d.c;
+        <span class="keyword">otherwise</span>
+            <span class="comment">% 99% of the time you should use an otherwise statement to</span>
+            <span class="comment">% handle ways you didn't intend to call this function. This</span>
+            <span class="comment">% will help catch bugs when you do something you didn't intend</span>
+            <span class="comment">% to do.</span>
+            error(<span class="string">'Input value not valid. No file loaded.'</span>);
+    <span class="keyword">end</span>
+    <span class="comment">% save the input last so that an error is thrown if a bad input value is</span>
+    <span class="comment">% passed in. We do not save the bad input into inputPrevious.</span>
+    inputPrevious = input;
+<span class="keyword">else</span>
+    fprintf(<span class="string">'No file loaded on this call.\n'</span>);
+<span class="keyword">end</span>
+
+<span class="comment">% pass data to the output just for demonstration purposes</span>
+output = data;
+
+
+<span class="keyword">end</span>
+</pre>
+</p><h2 id="2">Prepare workspace and command line</h2><pre class="codeinput">clc;
+clear <span class="string">all</span>; <span class="comment">%#ok&lt;CLALL&gt; % clears the persistent variables. Be careful with this!!!</span>
+</pre><h2 id="3">call persistentFunction the first time</h2><pre class="codeinput">persistentFunction(1)
+</pre><pre class="codeoutput">file1.mat loaded.
+
+ans =
+
+     1
+
+</pre><h2 id="4">call persistentFunction again with the same value</h2><pre class="codeinput">persistentFunction(1)
+</pre><pre class="codeoutput">No file loaded on this call.
+
+ans =
+
+     1
+
+</pre><h2 id="5">call persistentFunction and change the value</h2><pre class="codeinput">persistentFunction(2)
+</pre><pre class="codeoutput">file2.mat loaded.
+
+ans =
+
+     2
+
+</pre><h2 id="6">call persistentFunction and change the value</h2><pre class="codeinput">persistentFunction(1)
+</pre><pre class="codeoutput">file1.mat loaded.
+
+ans =
+
+     1
+
+</pre><h2 id="7">call persistentFunction and change the value</h2><pre class="codeinput">persistentFunction(2)
+</pre><pre class="codeoutput">file2.mat loaded.
+
+ans =
+
+     2
+
+</pre><h2 id="8">call persistentFunction again with the same value</h2><pre class="codeinput">persistentFunction(2)
+</pre><pre class="codeoutput">No file loaded on this call.
+
+ans =
+
+     2
+
+</pre><h2 id="9">call persistentFunction with a bad input value</h2><pre class="codeinput"><span class="keyword">try</span>
+    persistentFunction(3)
+<span class="keyword">catch</span> me
+    <span class="comment">% turn the error to a warning</span>
+    warning(me.message);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Warning: Input value not valid. No file loaded. 
+</pre><h2 id="10">call persistentFunction again with the same value that last worked</h2><pre class="codeinput">persistentFunction(2)
+</pre><pre class="codeoutput">No file loaded on this call.
+
+ans =
+
+     2
+
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB® R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Persistent Example
+% This example demonstrates how to use persistent variables when loading
+% data in a function. Doing things this way guarantees that the "data"
+% value in |persistentFunction| is only loaded or changed when necessary.
+%
+% Note that, I have a hunch that MATLAB may actually recognize a function
+% is called repeatedly loading a mat file when not using persistent. It may
+% do a form of what "persistentFunction" does with not loading the mat
+% file implicitly. If know for sure about this behavior, please inform me.
+
+%% persistentFunction Code
+%
+% <html>
+% <iframe src="persistentFunction.html" width="100%" height="100%"></iframe>
+% </html>
+%
+
+
+%% Prepare workspace and command line
+clc;
+clear all; %#ok<CLALL> % clears the persistent variables. Be careful with this!!!
+
+%% call persistentFunction the first time
+persistentFunction(1)
+%% call persistentFunction again with the same value
+persistentFunction(1)
+%% call persistentFunction and change the value
+persistentFunction(2)
+%% call persistentFunction and change the value
+persistentFunction(1)
+%% call persistentFunction and change the value
+persistentFunction(2)
+%% call persistentFunction again with the same value
+persistentFunction(2)
+%% call persistentFunction with a bad input value
+try
+    persistentFunction(3)
+catch me
+    % turn the error to a warning
+    warning(me.message);
+end
+%% call persistentFunction again with the same value that last worked
+persistentFunction(2)
+##### SOURCE END #####
+--></body></html>

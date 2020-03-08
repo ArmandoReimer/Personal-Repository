@@ -1,0 +1,153 @@
+<html>
+
+<head>
+<title>Help Text pseudo object</title>
+<style>
+<!--
+span.mcode
+{ color: #ff0000;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+span.mcode2
+{ color: #4040ff;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+span.mcode3
+{ color: #4040ff;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+  font-size: 80%;
+}
+h3 { color: #009988; margin-bottom: 0 }
+span.fx
+{ color: #4040ff;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+span.fx2
+{ color: #4040ff; font-size: 80%;
+  font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+}
+-->
+</style>
+
+</head>
+<body>
+
+<img src="../images/plt.png" width="300" height="160" align="right"></td>
+<br><h1>The help text pseudo object</h1> <br clear="left"><br><br>
+        This pseudo object can be thought of as a super text object ... i.e. a collection
+        of text objects that can be created and deleted with a single command. The pseudo
+        object is created with either on of the following two commands:<br><br>
+        <span class="mcode">plt('HelpText','set',v);</span><br>
+        <span class="mcode">plt('HelpText','on',v);</span><br><br>where <span class="mcode">v</span>
+        is a string or more commonly a cell array of strings and string properties. The HelpText
+        object is associated with the current figure window. Unlike the other pseudo objects, a
+        figure may contain only one HelpText object, which is why an object handle is not returned.
+        If you create a new HelpText object for a figure that already has one, the old one is simply
+        deleted before the new one is created.
+        <br><br>
+        The second form above ('on') is equivalent to the following two commands:<br>
+        <span class="mcode">plt('HelpText','set',v);</span><br>
+        <span class="mcode">plt('HelpText','on');</span><br>
+        where the 'on' command is described below. Thus the two initialization forms are similar
+        except that when the first form is used the text will not become visible until the first
+        'on' command is issued, whereas with the second form, the text becomes visible immediately.
+        <br><br>
+        As mentioned in the
+        <nobr><a href="../Programming%20with%20plt/Labels%20and%20figure%20properties.htm">Labels and figure properties</a></nobr>
+        section you may also create a HelpText pseudo object at the same time the plt pseudo object is created
+        by including <span class="mcode">'HelpText',v</span> in the parameter list of the call
+        to plt. (In fact, that is by far the most common way this pseudo object is created.)
+        Creating the HelpText that way is similar to the 'on' command above in that the help text
+        becomes visible right away (i.e. a separate HelpText 'on' command is not needed).
+        <br><br>
+        The structure of the <span class="mcode">v</span> parameter is described in the table at the
+        bottom of this page, but first I'll list the commands used to control the HelpText object.
+        The functional form may be used but the command form is shown below since that is more
+        convenient when only string arguments are needed:<br><br>
+        <table border="3" cellpadding="4" cellspacing="0" vspace="12" hspace="20" bordercolor="#9999ff">
+        <tr><td width="220"><span class="mcode">plt HelpText on</span></td>
+            <td>Although the pseudo object is created with the above <span class="mcode">'set'</span>
+                command, the individual text objects defined are not actually created until this
+                <span class="mcode">on</span> command is given. Most often this command is used to
+                reenable the Help Text after it was turned off with the command shown below.</td>
+        </tr>
+        <tr><td><span class="mcode">plt HelpText<br>plt&nbsp;HelpText&nbsp;off</span></td>
+            <td>Both of these forms are equivalent. They delete the text objects created by the above
+                <span class="mcode">on</span> command. Often you will want the help text to disappear
+                once the user starts using the plot so it doesn't get in the way. One way to do this
+                is to include <span class="mcode">'MoveCB','plt&nbsp;HelpText;'</span> in the parameter
+                list when you are creating the plt pseudo object. This sets the move cursor callback
+                so that when you move the cursor or click on the plot, the help text will be removed.</td>
+        </tr>
+        <tr><td><span class="mcode">plt('HelpText','get')</span></td>
+            <td>This returns the <span class="mcode">v</span> parameter that was used to create the HelpText object. There aren't many uses for this command, although one use would be to
+            copy a HelpText object from one figure to another.
+            </td>
+        </tr>
+        <tr><td><span class="mcode">plt('HelpText','text')</span></td>
+            <td>This returns a list of handles to text objects that were created after a helptext
+            <span class="mcode">'on'</span> command has been executed. An empty list is returned
+            if the helptext object is currently off. Since Helptext is marked with a special user
+            value, an equivalent result is returned from the command
+            <nobr><span class="mcode">findobj(gcf,'user',355/113);</span></nobr>
+            </td>
+        </tr>
+        </table>
+        <br>
+        The easiest way to describe the structure of the <span class="mcode">v</span> argument used
+        above is by a series of examples:<br>
+        <br>
+        <table border="3" cellpadding="4" cellspacing="0" vspace="12" hspace="20" bordercolor="#9999ff">
+        <tr><td width="300"><span class="mcode">'abcdef'</span></td>
+            <td>Using a single string for the <span class="mcode">v</span> parameter doesn't give
+                the resulting HelpText object much utility beyond the underlying text object it creates
+                but this is still sometimes useful because it is so easy to create along with the plt pseudo object.</td>
+        </tr>
+        <tr><td><span class="mcode">{'abcdef' -.1+.5i}</span></td>
+            <td>Usually you will use a cell array to define the help text which allows you to specify more parameters
+                other than just the string. The only required parameter when using the cell array definition is the
+                text object location which is specified by a complex number (the real part giving the horizontal position
+                and the imaginary part giving the vertical position). In this example the horizontal position is to the
+                left of the main axis (by 10% of the plot) and the vertical position is at the middle of the main plot.
+                If the location is not specified (by using a string argument as in the example above) the position used
+                is .03+.96i</td>
+        </tr>
+        <tr><td><span class="mcode">{'abc'&nbsp;'def'&nbsp;'line3' .5+.96i<br>'color' 703050 'fontsize' 20}</span></td>
+            <td>Each text string may be as many lines as you want (3 lines in this example). After the position
+                element you may specify as many property value pairs as you need. Only text properties are
+                allowed. If the text color is not specified, the default color [1 .6 0] is used. The font size will
+                default to 12 if not specified.  Note that for this form (as well as the following one below), the
+                position value (complex) is required. This helptext argument must be a row cell array. (A column
+                cell array will not produce the expected result.) Note that in this example, the color is defined
+                using one of plt's alternate forms (described in the
+                <nobr><a href="../Programming%20with%20plt/Colors.htm">Colors</a></nobr> section) and the number
+                703050 used here could have been replaced with [70&nbsp;30&nbsp;50] or the traditional Matlab
+                form [.7&nbsp;.3&nbsp;.5].</td>
+        </tr>
+        <tr><td><span class="mcode">{'ab' 'cd' .5+.9i<br>'color' 'red' 2i<br>'line3' .1+.1i 2i<br>'line4' .9+.9i<br>'fontweight' 'bold'}</span></td>
+            <td>With the full generality, you may define as many strings as you want, with each of these
+                strings being in different locations with different string properties. This example creates
+                three strings, the first of which is two lines. The "2i" (which occurs twice) in this example
+                is a separator that indicates a new string is about to be defined. Actually any
+                complex number will serve the same purpose, but my habit is to always use "2i" for this
+                separator to make it easy to recognize.<br><br>
+                In this example, the first two help lines ('ab' & 'cd') will be red because the text is followed
+                by the color specifier [1 0 0]. However the next two lines ('line3' & 'line4') have no color
+                specifier, so they will be in the default color ([1 .6 0]). However if you change the
+                <span class="mcode">2i</span> that appears just before <span class="mcode">'line3'</span>
+                to a <span class="mcode">-2i</span> then line3 will also be red. This is because a delimiter
+                with a negative imaginary component indicates that you want all the properties specified for
+                the previous helptext line to apply to the current one as well. If you changed the next
+                 <span class="mcode">2i</span> to a  <span class="mcode">-2i</span> as well, then all the help
+                lines defined will be red. If the same property is included both after the text string and
+                in the carry over property list (enabled by the negative imaginary component) then the
+                property value after the text string takes priority.
+            </td>
+        </tr>
+        </table>
+        <br>Many of the demo programs (including afilt, curves, editz, gauss, julia, pltquiv, subplt, tasplt, trigplt, and wfalltst) create a HelpText
+        pseudo object, so you can refer to these programs to see practical examples of the use of the HelpText pseudo object.
+
+</body>
+
+</html>
