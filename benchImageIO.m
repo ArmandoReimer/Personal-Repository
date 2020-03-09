@@ -6,15 +6,15 @@
 %
 % The purpose of this tool is to provide more and easier control over MAT-file formatting. In
 % particular, I had some performance problems with partial IO for large arrays and found the
-% solutions suggested by Mathworks to be pretty clunky. The three features that |newmatic| 
+% solutions suggested by Mathworks to be pretty clunky. The three features that |newmatic|
 % includes are:
-% 
+%
 % # Creating new array variables with a specified type
 % # Allocating the array size (see <https://www.mathworks.com/help/matlab/import_export/troubleshooting-file-size-increases-unexpectedly-when-growing-an-array.html here>)
 % # Defining sane chunk sizes (see "Accelerate Save and Load Operations for Version 7.3 MAT-Files" <https://www.mathworks.com/help/matlab/import_export/mat-file-versions.html here>)
 %
-% For our test case, we will make save a relatively large 3D array to a MAT-file one "page" at a 
-%   time, and then read it back in the same way. This tasks mimics the task that inspired me to 
+% For our test case, we will make save a relatively large 3D array to a MAT-file one "page" at a
+%   time, and then read it back in the same way. This tasks mimics the task that inspired me to
 %   write this tool, namely partial reads from a stack of image arrays.
 %
 % TLDR: *Using newmatic makes partial access roughly the same speed as reading/writing whole
@@ -28,90 +28,104 @@
 %  times.
 %
 
-function newmatic_demo(varargin)
+function benchImageIO(varargin)
 % Here is the test data:
 
 if isempty(varargin)
     num_row = 2000;
     num_col = 1000;
     num_img = 50;
-    dataType = 'uint8';
+    dataType = 'uint16';
     images = randi(255, num_row, num_col, num_img, dataType);
 else
     images = varargin{1};
     num_row = size(images, 1);
     num_col = size(images, 2);
     num_img = size(images, 3);
+    if numel(size(images)>3)
+        num_frames = size(images, 4);
+    end
+    if numel(size(images)>4)
+        numCh = size(images, 5);
+    end
     dataType = class(images);
+end
+
+dim = numel(size(images));
+var_size = [num_row, num_col, num_img];
+var_chunk = [num_row, num_col, 1];
+if dim ==4
+    var_size = [var_size, num_frames];
+    var_chunk = [num_row, num_col, num_frames, 1];
 end
 
 
 %% Complete read/write with native MATLAB tools
 %
-% As a baseline, we will use native MATLAB matfile() to write the data at once  
-
-% get a temporary file name
-native_complete_file = [tempname, '.mat'];
-native_complete_cleanup = onCleanup(@() delete(native_complete_file));
-
-% create a matfile object
-native_complete_mat = matfile(native_complete_file, 'Writable', true);
-
-% populate the file at once
-tic;
-native_complete_mat.images = images;
-native_complete_write_time = toc;
-fprintf('Native-complete, write: %.3f s\n', native_complete_write_time);
-
-% read the images back in from the file one at a time
-tic;
-[~] = native_complete_mat.images;
-native_complete_read_time = toc; 
-fprintf('Native-complete, read: %.3f s\n', native_complete_read_time);
-
-% get the file size
-native_complete_file_obj = dir(native_complete_file);
-native_complete_file_size = native_complete_file_obj.bytes/1024/1024;
-
-
-%% Partial read/write with native MATLAB tools
+% As a baseline, we will use native MATLAB matfile() to write the data at once
+% 
+% % get a temporary file name
+% native_complete_file = [tempname, '.mat'];
+% native_complete_cleanup = onCleanup(@() delete(native_complete_file));
+% 
+% % create a matfile object
+% native_complete_mat = matfile(native_complete_file, 'Writable', true);
+% 
+% % populate the file at once
+% tic;
+% native_complete_mat.images = images;
+% native_complete_write_time = toc;
+% fprintf('Native-complete, write: %.3f s\n', native_complete_write_time);
+% 
+% % read the images back in from the file one at a time
+% tic;
+% [~] = native_complete_mat.images;
+% native_complete_read_time = toc;
+% fprintf('Native-complete, read: %.3f s\n', native_complete_read_time);
+% 
+% % get the file size
+% native_complete_file_obj = dir(native_complete_file);
+% native_complete_file_size = native_complete_file_obj.bytes/1024/1024;
+% 
+% 
+% %% Partial read/write with native MATLAB tools
+% %
+% % Now let's try using native MATLAB matfile() to do read and write the data one image at a time
+% % (i.e., partial IO). This is the real use case we are interested in.
 %
-% Now let's try using native MATLAB matfile() to do read and write the data one image at a time
-% (i.e., partial IO). This is the real use case we are interested in.
-
-% get a temporary file name
-native_partial_file = [tempname, '.mat'];
-native_partial_cleanup = onCleanup(@() delete(native_partial_file));
-
-% create a matfile object
-native_partial_mat = matfile(native_partial_file, 'Writable', true);
-
-% allocate the array
-%   see: https://www.mathworks.com/help/matlab/import_export/troubleshooting-file-size-increases-unexpectedly-when-growing-an-array.html
-native_partial_mat.images = uint8.empty(0, 0, 0);
-native_partial_mat.images(num_row, num_col, num_img) = uint8(0);
-
-% populate the file one image at a time
-tic;
-for ii = 1:num_img
-    native_partial_mat.images(:, :, ii) = images(:, :, ii);
-end
-native_partial_write_time = toc;
-fprintf('Native-partial, write: %.3f s\n', native_partial_write_time);
-
-% read the images back in from the file one at a time
-tic;
-for ii = 1:num_img
-    [~] = native_partial_mat.images(:, :, ii);
-end
-native_partial_read_time = toc;
-fprintf('Native-partial, read: %.3f s\n', native_partial_read_time);
-
-% get the file size
-native_partial_file_obj = dir(native_partial_file);
-native_partial_file_size = native_partial_file_obj.bytes/1024/1024;
-
-
+% % get a temporary file name
+% native_partial_file = [tempname, '.mat'];
+% native_partial_cleanup = onCleanup(@() delete(native_partial_file));
+%
+% % create a matfile object
+% native_partial_mat = matfile(native_partial_file, 'Writable', true);
+%
+% % allocate the array
+% %   see: https://www.mathworks.com/help/matlab/import_export/troubleshooting-file-size-increases-unexpectedly-when-growing-an-array.html
+% native_partial_mat.images = uint16.empty(0, 0, 0);
+% native_partial_mat.images(num_row, num_col, num_img) = uint16(0);
+%
+% % populate the file one image at a time
+% tic;
+% for ii = 1:num_img
+%     native_partial_mat.images(:, :, ii) = images(:, :, ii);
+% end
+% native_partial_write_time = toc;
+% fprintf('Native-partial, write: %.3f s\n', native_partial_write_time);
+%
+% % read the images back in from the file one at a time
+% tic;
+% for ii = 1:num_img
+%     [~] = native_partial_mat.images(:, :, ii);
+% end
+% native_partial_read_time = toc;
+% fprintf('Native-partial, read: %.3f s\n', native_partial_read_time);
+%
+% % get the file size
+% native_partial_file_obj = dir(native_partial_file);
+% native_partial_file_size = native_partial_file_obj.bytes/1024/1024;
+%
+%
 %% Partial read/write with newmatic
 %
 % Now for the good stuff. Let's use |newmatic| to create our file, and then read and write the data
@@ -123,23 +137,36 @@ newmatic_partial_file = [tempname, '.mat'];
 newmatic_partial_cleanup = onCleanup(@() delete(newmatic_partial_file));
 
 % create a matfile object with newmatic
-var_size = [num_row, num_col, num_img];
-var_chunk = [num_row, num_col, 1];
+
 newmatic_partial_mat = newmatic(newmatic_partial_file, newmatic_variable('images', dataType, var_size, var_chunk));
 
 % populate the file one image at a time
 tic;
-for ii = 1:num_img
-    newmatic_partial_mat.images(:, :, ii) = images(:, :, ii);
+if dim==3
+    for ii = 1:num_img
+        newmatic_partial_mat.images(:, :, ii) = images(:, :, ii);
+    end
+elseif dim==4
+    for ii = 1:num_frames
+        newmatic_partial_mat.images(:, :, :, ii) = images(:, :, :, ii);
+    end
 end
+
 newmatic_partial_write_time = toc;
 fprintf('Newmatic-partial, write: %.3f s\n', newmatic_partial_write_time);
 
 % read the images back in from the file one at a time
 tic;
-for ii = 1:num_img
-    [~] = newmatic_partial_mat.images(:, :, ii);
+if dim==3
+    for ii = 1:num_img
+        [~] = newmatic_partial_mat.images(:, :, ii);
+    end
+elseif dim==4
+    for ii = 1:num_frames
+        [~] = newmatic_partial_mat.images(:, :, :, ii);
+    end
 end
+
 newmatic_partial_read_time = toc;
 fprintf('Newmatic-partial, read: %.3f s\n', newmatic_partial_read_time);
 
@@ -156,9 +183,9 @@ newmatic_partial_file_size = newmatic_partial_file_obj.bytes/1024/1024;
 newmatic_complete_file = [tempname, '.mat'];
 newmatic_complete_cleanup = onCleanup(@() delete(newmatic_complete_file));
 
+
 % create a matfile object with newmatic
-var_size = [num_row, num_col, num_img];
-var_chunk = [num_row, num_col, 1];
+
 newmatic_complete_mat = newmatic(newmatic_complete_file, newmatic_variable('images', dataType, var_size, var_chunk));
 
 % populate the file at-once
@@ -181,6 +208,13 @@ newmatic_complete_file_size = newmatic_complete_file_obj.bytes/1024/1024;
 %% Comparison
 %
 % To make the comparison a bit easier, check out the tabulated results below:
+native_partial_write_time = NaN;
+native_partial_read_time = NaN;
+native_partial_file_size = NaN;
+
+native_complete_write_time = NaN;
+native_complete_read_time = NaN;
+native_complete_file_size = NaN;
 
 results = table(...
     round([native_complete_write_time; newmatic_complete_write_time; native_partial_write_time; newmatic_partial_write_time], 2), ...
