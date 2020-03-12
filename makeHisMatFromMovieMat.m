@@ -1,4 +1,4 @@
-function hisMat = makeHisMatFromMovieMat(Prefix)
+function hisMat = makeHisMatFromMovieMat(Prefix, varargin)
 % dataTypes = { '1Dg_2xDl', '1Dg-8D_FFF', '1DgW_2x_Leica', '1DgW_FFF', '1Dg11_FFF', '1Dg-5_FFF', '1DgVW_FFF', '1Dg_og'};
 % 
 % for i = 1:length(dataTypes)
@@ -21,8 +21,11 @@ choosegui = true;
 %Load the reference histogram for the fake histone channel
 load('ReferenceHist.mat', 'ReferenceHist');
 
-
-movieMat = loadMovieMat([PreProcFolder,filesep,Prefix,filesep, Prefix, '_movieMat.mat']);
+if isempty(varargin)
+    movieMat = loadMovieMat([PreProcFolder,filesep,Prefix,filesep, Prefix, '_movieMat.mat']);
+else
+    movieMat = varargin{1};
+end
 
 ySize = size(movieMat, 1);
 xSize = size(movieMat, 2);
