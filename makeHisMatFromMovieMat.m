@@ -1,14 +1,4 @@
 function hisMat = makeHisMatFromMovieMat(Prefix, varargin)
-% dataTypes = { '1Dg_2xDl', '1Dg-8D_FFF', '1DgW_2x_Leica', '1DgW_FFF', '1Dg11_FFF', '1Dg-5_FFF', '1DgVW_FFF', '1Dg_og'};
-% 
-% for i = 1:length(dataTypes)
-%      [~, ~, prefixes] = getDorsalPrefixes(dataTypes{i});
-%     for k = 1:length(prefixes)
-%         if i~=1 & k~=1
-%         makeHisMatFromMovieMat(prefixes{k});
-%         end
-%     end
-% end
 
 ProjectionType = 'midsumprojection';
 Channels = {{'Dorsal-Venus:Nuclear'}, {'MCP-mCherry'}, {''}};
@@ -44,11 +34,15 @@ else
     
 end
 
+hisFile = [PreProcFolder, filesep, Prefix,filesep, Prefix, '_hisMat.mat'];
 
-hisMatic = newmatic([PreProcFolder, filesep, Prefix,filesep, Prefix, '_hisMat.mat'],true,...
-    newmatic_variable('hisMat', 'uint16', [ySize, xSize, nFrames], [ySize, xSize, 1]));
-
-hisMatic.hisMat = hisMat;
+if whos(var2str(hisMat)).bytes < 2E9
+    save(hisFile, 'hisMat', '-v6');
+else
+    hisMatic = newmatic(hisFile,true,...
+        newmatic_variable('hisMat', 'uint8', [ySize, xSize, nFrames], [ySize, xSize, 1]));
+    hisMatic.hisMat = hisMat;
+end
 
 disp('Nuclear files saved.')
 

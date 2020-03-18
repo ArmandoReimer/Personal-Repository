@@ -1,6 +1,6 @@
 function imageTile(imageCell, titleCell)
 
-figure(2); set(gcf, 'Units', 'normalized', 'Position', [.25, .25, .5, .5]);
+set(gcf, 'Units', 'normalized', 'Position', [.25, .25, .5, .5]);
 colormap('jet');
 tiledlayout('flow', 'TileSpacing', 'none', 'Padding', 'none')
 
