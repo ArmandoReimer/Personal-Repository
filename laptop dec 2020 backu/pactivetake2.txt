@@ -1,0 +1,60 @@
+
+% \subsection{$P_{active}$ calculations take 2}
+
+% The true positive rate of spot detection for our experiment in the presence of active and inactive nuclei is given by Bayes's theorem as 
+
+% \begin{equation}
+%     \Pr( detect \mid active ) = \frac{\Pr( active \mid detect )\Pr(detect)}{\Pr( active )}
+% \end{equation}
+
+% where $\Pr( active )$ is the true fraction of active nuclei, $\Pr(detect)$ is the fraction of nuclei observed to be active given a non-zero detection threshold and incorporates both the biological fraction active and experimental detection threshold. The quantity that pertains to only the detection threshold component is what we aim to estimate, $\Pr( detect \mid active )$. We'll assume our false positive rate to be zero so that 
+
+% \begin{equation}
+%     \Pr( detect \mid active ) = \frac{\Pr(detect)}{\Pr( active )}.
+% \end{equation}
+
+% $\Pr( detect \mid active )$ isn't directly measured, so we'll have to find a way to estimate this quantity indirectly. Consider splitting the movie up into independent samples so that we have multiple opportunities to detect a spot, once in each sample. For simplicity, let's consider splitting the movie into two movies, each with half the frame rate. If the time between frames is small enough, then we can consider the odds of seeing a spot that's fluctuating near the detection threshold (by e.g. Poissonian shot noise) to be independent in each frame. 
+
+% Considering two movies A and B, we'll write the probability of detecting a spot in movie A as $\Pr(A)$, in movie B as $\Pr(B)$, and in either A or B as $\Pr(A \cup B)$
+
+% \begin{equation}
+%     \Pr( A \cup B \mid active ) = \frac{\Pr(A \cup B)}{\Pr( active )}
+% \end{equation}
+
+% We'll take advantage of the fact that sometimes, due to noise, we'll miss a spot in either A or B. The probability of that happening should be equal to the probability of missing a spot in A or B given that it's actually active. Then,
+% \begin{equation}
+%     \Pr( A \mid A \cup B ) = \Pr(A \cup B \mid active)
+% \end{equation}
+
+% On the right hand side, we have a quantity that is not observable because it entails knowing whether a nucleus is biologically active or not. However, on the left hand side, there are only observable quantities. We can use Bayes's theorem on the LHS to yield the unconditional probabilities
+
+% \begin{equation}
+% \Pr( A \mid A \cup B ) = \frac{\Pr( A \cup B \mid A )\Pr(A)}{\Pr(A \cup B)}
+% \end{equation}
+% \begin{equation}
+%  = \frac{\Pr(A)}{\Pr(A \cup B)}. 
+% \end{equation}
+
+% There's no reason to think that $\Pr(A)$ and $\Pr(B)$ are different, so we take them to be equal.
+
+% To actually estimate this quantity, we use the nuclei observed to be on in our each movie.
+
+% \begin{equation}
+%     \Pr(A) = \frac{N_A}{N_{nuclei}} 
+% \end{equation}
+% \begin{equation}
+%     \Pr(B) = \frac{N_B}{N_{nuclei}} 
+% \end{equation}
+% \begin{equation}
+%     \Pr(A \cup B) = \frac{N_A + N_B}{N_{nuclei}} 
+% \end{equation}
+
+% where $N_A$ is the number of nuclei with observed spots in movie A, $N_B$ is the number of nuclei with observed spots in movie B, and $N_{nuclei}$ is the total number of nuclei in the field of view. Since  $\Pr(A)$ and $\Pr(B)$ are taken to be equal, a better estimate of this quantity is their average 
+
+% \begin{equation}
+%     \Pr(A) = \Pr(B) = \frac{N_A + N_B}{2N_{nuclei}}  
+% \end{equation}
+
+% Now we have 
+
+% \Pr( A \mid A \cup B ) = \frac{\frac{N_A + N_B}{2N_{nuclei}}}{\frac{N_A + N_B}{N_{nuclei}}}

@@ -1,0 +1,78 @@
+
+dt = 5;
+tf = 1E4;
+to = 0;
+pols = [];
+nPols = 0;
+gene_length = 3000;
+ms2_length = 1500;
+pTerminate = 0;
+pInitiate = .1;
+fluo = [];
+  %experimental parameters
+TIME_PER_FRAME = 10; %s
+app.params.NOISE_SCALE_EXP = 0; %au
+app.params.MEAN_POL_LOADING_RATE = 8; %pol/min
+app.params.MEAN_POL_OFFLOADING_RATE = 8; %pol/min
+app.params.MEAN_BACKGROUND = 0; %au
+app.params.DETECTION_LIMIT = 0; %au
+app.params.MCP_INTENSITY = .2; %au / frame / mcp-gfp
+app.params.FLUO_CALIBRATION = 25; %au / polymerase
+%biological parameters
+app.params.REPORTER_LENGTH = 3; %kb. this is ~lacZ
+app.params.N_LOOPS = 23; %v7
+app.params.LOOP_SIZE = .0583; %kb. ms2v1, v5 or v7
+app.params.GENE_LENGTH = app.params.REPORTER_LENGTH + app.params.LOOP_SIZE*app.params.N_LOOPS;
+app.params.ELON_RATE = 2.5; %kb/min
+app.params.LOOP_RATE = 47; %loops / min. (.783 loops/s)
+app.params.T_INIT = 3; %min
+app.params.T_FIN = 8; %min
+app.params.INTERPHASE = 10; %min
+app.params.POL_FOOTPRINT = .04; %kbp
+app.params.N_POLS = round(app.params.GENE_LENGTH / app.params.POL_FOOTPRINT);
+app.params.NOISE_SCALE_BIO = 0; %au
+app.params.FRACTION_ACTIVE = .4;
+
+
+rng(1, 'twister')
+n = 0;
+for t = to:dt:tf
+    n = n + 1;
+    %1. preinitiation
+    %2. %initiation
+    r = rand;
+    if r < pInitiate
+        newPol = struct('position', 0, 'deleteMe', false, 'nLoops', 0);
+        pols = [pols; newPol];
+        pols(end).position = 0;
+    end
+    %3. elongation
+    for p = 1:length(pols)
+        pols(p).position = pols(p).position + 1;
+        if pols(p).position < ms2_length
+            if ~mod(pols(p).position, 50)
+                pols(p).nLoops = pols(p).nLoops + 1;
+            end
+        end
+    end
+    %4 termination
+    for p = 1:length(pols)
+        r = rand;
+        if r < pTerminate
+            pols(p).deleteMe = true;
+        end
+    end
+    
+    if ~isempty(pols)
+        pols([pols.deleteMe]) = [];
+        fluo(n) = sum([pols.nLoops]);
+    else
+        fluo(n) = 0;
+    end
+end
+
+tiledlayout('flow')
+nexttile;
+plot(to:dt:tf, fluo);
+nexttile;
+histogram(fluo);

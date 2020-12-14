@@ -1,0 +1,77 @@
+\subsection{$P_{active}$ calculations}
+
+
+The measured fraction of active nuclei, $P_{observed}$, is our main observable for this analysis. We calculate $P_{observed}$ by dividing the total number of nuclei with transcription spots detected over the entire nuclear cycle, $N_{active}$, by the total number of nuclei in the the field of view, $N_{nuclei}$. Namely,
+\begin{equation}
+    P_{observed} = \frac{N_{active}}{N_{nuclei}}.
+    \label{eq:NactiveNnuclei}
+\end{equation}
+However, it is possible that some nuclei with no detectable transcription spots actually were transcriptionally active, but at transcriptional levels below our detection limit. To account for this detection limit, we define $P_{detect}$ as the probability of detection. As a result, the observed fraction of active nuclei can be decomposed as
+\begin{equation}
+    P_{observed} = P_{active} \times P_{detect},
+    \label{eq:PactivePdetect}
+\end{equation}
+where $P_{active}$ is the true fraction of active nuclei.
+
+In order to estimate $P_{active}$, we first need to estimate $P_{detect}$.  We will take advantage of the fact that we do not have just a single snapshot of the spots, but a time series, and that for a nucleus to be considered transcriptionally active, a fluorescent spot needs to be detected in at least one frame. In other words, we have multiple chances to detect fluorescence spots within a given nucleus in each movie. 
+
+To simplify things, we assume that any change in mean fluorescence from one frame to the next in a movie is small compared to random fluctuations when the time between frames is small enough. In that case, if a spot is missed in one frame out of any pair of frames, it is due to fluctuation below our detection threshold. Our strategy, then, relies on dividing our movie into two movies with half the frame rate. As shown in Figure~\ref{fig:figPactive}, we will treat each of these movies, called movies A and B, as independent measurements of transcription and ask, for example, how often is a spot found in a nucleus in movie A, but not in movie B.
+
+ \begin{figure}[ht!]
+ \centering
+ \includegraphics[width=10cm]{Figures/pactive_figure_2.pdf}
+ \caption{ {\bf Schematic demonstrating fraction detected calculations.} The original movie is divided into two movies at half the frame rate.
+ }
+\label{fig:figPactive}
+\end{figure}
+
+In the context of these two movies, $P_{observed}$ is the total number of transcriptional loci detected in either movie A {\it or} B, $N_{A~or~B}$, divided by the total number of nuclei in the movie, $N_{nuclei}$. We invoke the definition of $P_{observed}$ from Equation~\ref{eq:NactiveNnuclei} in order to calculate the $P_{observed,AB}$ resulting from both movies. Namely,
+\begin{equation}
+    P_{observed,AB} = \frac{N_{A~or~B}}{N_{nuclei}}.
+    \label{eq:NABNnuclei}
+\end{equation}
+
+Now, we will consider the possibility that, for example, transcription spots could be detected for a given nucleus in movie A, but not for that same nucleus in movie B. We will use the number of spots we detected in one movie but not another, $N_{A~not~B}$ to estimate the false negative rate from movie A, 
+
+\begin{equation}
+    False~negative~rate~from~A = \frac{N_{B~not~A}}{N_{A~or~B}}.
+\end{equation}
+
+We define the detection probability as one minus the false negative rate. For movie A, this probability of detection is given by
+\begin{equation}
+    P_{detect_A} = 1 - \frac{N_{B~not~A}}{N_{A~or~B}}.
+\end{equation}
+
+Similarly, we find for movie B that
+
+\begin{equation}
+    False~negative~rate~from~B = \frac{N_{A~not~B}}{N_{A~or~B}}.
+\end{equation}
+and
+\begin{equation}
+    P_{detect_B} = 1 - \frac{N_{A~not~B}}{N_{A~or~B}}.
+\end{equation}
+
+In principle, the two measurements stemming from movies A and B are independent and identical---they should have the same detection rate. Therefore, we can average the detection rate in the two movies to get the average $P_{detect}$ given by
+\begin{equation}
+    P_{detect} = 1 - \frac{N_{A~not~B} + N_{B~not~A}}{2N_{A~or~B}}.
+\end{equation}
+Substituting in Equation~\ref{eq:NABNnuclei} and rearranging, we find that
+\begin{equation}
+    P_{detect} = 1 - \frac{N_{A~not~B} + N_{B~not~A}}{2N_{nuclei}P_{observed,AB}}.
+\end{equation}
+
+We now define $P_{A~not~B}$ as $\frac{N_{A~not~B}}{N_{nuclei}}$ and likewise for $P_{B~not~A}$. Therefore,
+\begin{equation}
+    P_{detect} = 1 - \frac{P_{A~not~B} + P_{B~not~A}}{2P_{observed,AB}}.
+    \label{eq:6}
+\end{equation}
+Now we can use Equation~\ref{eq:PactivePdetect} to estimate $P_{active}$. Substituting Equation~\ref{eq:6} into Equation~\ref{eq:PactivePdetect} and simplifying, we find that   
+\begin{align}
+    P_{active} &= \frac{P_{observed}}{P_{detect}}  \\
+    &= P_{observed}  \frac{1} 
+    { 1 - \frac{ P_{A~not~B}+ P_{B~not~A}}{2P_{observed}}} \\
+    &=  \frac{2P_{observed}^2} 
+    { {2P_{observed}} - P_{A~not~B}- P_{B~not~A} }.
+\end{align}
+In Figure~\ref{fig:figSignal}D, calculated $P_{detect}$ and for $P_{detect}$ the 1Dg data set. 
