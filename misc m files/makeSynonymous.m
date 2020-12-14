@@ -69,12 +69,11 @@ end
 %validate %GC
 lowerGC = .5;
 upperGC = .55;
-okGC = .5; %i made this up too.
 bounds = [lowerGC, upperGC];
 
 GCfreq = sum(outDNASeq == 'G' | outDNASeq == 'C') / length(outDNASeq);
 
-if GCfreq < bounds(1) | GCfreq > bounds(2)
+if GCfreq < bounds(1) || GCfreq > bounds(2)
 %     disp('GC content weird. Trying again.')
     outDNASeq = makeSynonymous(inSeq, forbidden, writePath);
 end
